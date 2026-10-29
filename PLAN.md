@@ -22,6 +22,17 @@ Updated: 2026-10-29 (second game, accessibility and sound pass).
 - [x] Create the `rf-games` Vercel project in the Rapidflare team, without a Git import.
 - [ ] Add the `VERCEL_TOKEN` Actions secret, run the first deployment, and attach `games.rapidflare.ai` (the share tags assume it; update them if a different address is chosen).
 
+## Resume here
+
+[PR #2](https://github.com/rapidflare-ai/rf-games/pull/2) (`codex/token-vercel-deploy`) adds the deploy workflow; it has been rebased onto `main` after both games merged. The `rf-games` Vercel project exists in the Rapidflare team with no Git import. Do not import or connect the GitHub repository in Vercel.
+
+1. Create a Vercel token with access to the Rapidflare team and add it as the `VERCEL_TOKEN` repository Actions secret in `rapidflare-ai/rf-games`. GitHub does not expose existing secrets, so the `rf-ux`/`rf-docs` token cannot be copied.
+2. Rerun PR #2's **Deploy to Vercel** workflow and check its preview URL: both games, `/updates`, and the `X-Robots-Tag: noindex` header.
+3. Merge PR #2; the push to `main` starts the first production deployment. If needed, dispatch the workflow on `main` manually to retry.
+4. Add `games.rapidflare.ai` under the project's Domains and create the DNS record Vercel shows. Then check the share cards in a link-preview debugger.
+
+`README.md` has the deploy commands, and `scripts/deploy.sh` also deploys by hand for someone with the token.
+
 ## First-release scope
 
 1. Keep game logic independent of presentation, with seeded UTC daily waves and unseeded practice.
@@ -36,6 +47,6 @@ The site is static under `public/`; `vercel.json` points Vercel there. `public/e
 
 Verification after the diagnostic and theme-lock revision: `node --test tests/*.test.mjs` passes (seven rule checks); browser play confirmed the diagnostic appears instead of a named part, no tray component is highlighted, a wrong fit does not disclose the answer, and a correct fit enables launch. The active Halloween theme and disabled “coming soon” options rendered correctly. The Updates page rendered with both signup controls disabled and an explicit no-collection message. Both pages fit a 390px viewport without horizontal overflow. Earlier repair-and-launch verification also confirmed a full result flow and that a scripted defense survived all 31 October seeds. Vercel preview remains pending until the project and token are provisioned.
 
-PR #2's first Actions run passed checkout, Node setup, and the seven game checks, then stopped at the deploy step with `VERCEL_TOKEN is required`. This confirms that the repository secret is the immediate setup blocker. The deployment script also passed `bash -n` and a mock CLI check for preview and production flags; workflow YAML parsed successfully. No live Vercel deployment has been tested yet.
+PR #2's latest Actions run passed checkout, Node setup, and the seven game checks, then stopped at the explicit token check. This confirms that the repository secret is the immediate setup blocker. The deployment script also passed `bash -n` and a mock CLI check for preview and production flags; workflow YAML parsed successfully. No live Vercel deployment has been tested yet.
 
 Open questions for a later iteration: whether to add a leaderboard, how to measure return play without tracking, and whether to promote a second game from `GAMES.md`.
