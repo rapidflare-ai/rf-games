@@ -46,6 +46,15 @@ jobs:
       - name: Check game rules
         run: node --test tests/*.test.mjs
 
+      - name: Check deployment token
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [[ -z "$VERCEL_TOKEN" ]]; then
+            echo '::error::Add the VERCEL_TOKEN Actions secret to rapidflare-ai/rf-games before deploying.'
+            exit 1
+          fi
+
       - name: Install Vercel CLI
         run: npm install --global vercel@59.1.4
 

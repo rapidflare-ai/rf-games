@@ -18,7 +18,7 @@ Deployments use the Vercel CLI with a token; **do not import or connect the GitH
 
 One-time setup in the Rapidflare Vercel team (install the Vercel CLI first):
 
-1. Create a Vercel token with access to that team and create the project with `vercel project add rf-games --scope rapidflare --token "$VERCEL_TOKEN"`. This creates a Vercel project without connecting Git.
+1. Obtain a Vercel token with access to that team and create the project with `vercel project add rf-games --scope rapidflare --token "$VERCEL_TOKEN"`. This creates a Vercel project without connecting Git.
 2. Add that token as the `VERCEL_TOKEN` **Actions secret** in `rapidflare-ai/rf-games`. The token is currently absent from this repository's Actions secrets; existing repositories' secrets cannot be read or copied from GitHub.
 3. Run **Deploy to Vercel** from the Actions tab on `main` for the first production deployment. Later changes deploy automatically on PRs and on `main`.
 4. Verify the generated `vercel.app` URL, including `/updates`. Add a custom domain in Vercel and configure its DNS only when you choose one.
