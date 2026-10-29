@@ -7,7 +7,7 @@ Updated: 2026-10-29 (second game, accessibility and sound pass).
 - [x] Create the public `rapidflare-ai/rf-games` repository and implementation branch.
 - [x] Capture product direction in `GOAL.md` and candidate games in `GAMES.md`.
 - [x] Implement and verify Haunted Circuit Siege.
-- [x] Publish the implementation branch and open [PR #1](https://github.com/rapidflare-ai/rf-games/pull/1).
+- [x] Publish and merge [PR #1](https://github.com/rapidflare-ai/rf-games/pull/1).
 - [x] Replace explicit component requests with fault diagnostics that players solve, with the friendly AI (now Flare) as a limited assist.
 - [x] Set Halloween as the active theme in code and show disabled upcoming themes in the selector.
 - [x] Add an Updates page that explains future launch emails and clearly states signup is not available yet.
@@ -17,7 +17,8 @@ Updated: 2026-10-29 (second game, accessibility and sound pass).
 - [x] Build Ten Questions Till Dawn with 100 pre-written puzzles and a daily rotation through all of them.
 - [x] Keep the games out of search (noindex meta and header), add share cards with rendered images, and add a parody disclaimer.
 - [x] Replace the crowded landing pages with a first-visit splash and an on-demand help panel; draw Flare as a blue flame holding a wrench (Circuit Siege) or a question sign (Ten Questions).
-- [ ] Connect the GitHub repository to Vercel and choose a public domain when ready. The share tags assume `games.rapidflare.ai`; update them if a different address is chosen. The local Vercel CLI currently reports an invalid token, so repository import needs a refreshed Vercel login or an existing team integration.
+- [x] Add the token based Vercel CLI workflow used by other Rapidflare repos, without a Vercel Git import.
+- [ ] Add the `VERCEL_TOKEN` Actions secret, run the first deployment, and attach `games.rapidflare.ai` (the share tags assume it; update them if a different address is chosen).
 
 ## First-release scope
 
@@ -29,8 +30,8 @@ Updated: 2026-10-29 (second game, accessibility and sound pass).
 
 ## Handoff notes
 
-The site is static under `public/`; `vercel.json` points Vercel there. `public/engine.mjs` owns deterministic rules and diagnostics; `public/themes.mjs` owns theme data and the `ACTIVE_THEME` launch switch; `public/game.mjs` is the browser UI. Upcoming themes are disabled in the dropdown. `public/updates.html` is an email signup painted door: inputs are disabled and no addresses are collected. The daily challenge uses the UTC date so it is common worldwide. No service credentials are required.
+The site is static under `public/`; `vercel.json` points Vercel there. `public/engine.mjs` owns deterministic rules and diagnostics; `public/themes.mjs` owns theme data and the `ACTIVE_THEME` launch switch; `public/game.mjs` is the browser UI. Upcoming themes are disabled in the dropdown. `public/updates.html` is an email signup painted door: inputs are disabled and no addresses are collected. The daily challenge uses the UTC date so it is common worldwide. The game needs no runtime credentials; the deploy workflow needs a Vercel token.
 
-Verification after the diagnostic and theme-lock revision: `node --test tests/*.test.mjs` passes (seven rule checks); browser play confirmed the diagnostic appears instead of a named part, no tray component is highlighted, a wrong fit does not disclose the answer, and a correct fit enables launch. The active Halloween theme and disabled “coming soon” options rendered correctly. The Updates page rendered with both signup controls disabled and an explicit no-collection message. Both pages fit a 390px viewport without horizontal overflow. Earlier repair-and-launch verification also confirmed a full result flow and that a scripted defense survived all 31 October seeds. Vercel preview remains pending because the CLI token is invalid and the browser requires login.
+Verification after the diagnostic and theme-lock revision: `node --test tests/*.test.mjs` passes (seven rule checks); browser play confirmed the diagnostic appears instead of a named part, no tray component is highlighted, a wrong fit does not disclose the answer, and a correct fit enables launch. The active Halloween theme and disabled “coming soon” options rendered correctly. The Updates page rendered with both signup controls disabled and an explicit no-collection message. Both pages fit a 390px viewport without horizontal overflow. Earlier repair-and-launch verification also confirmed a full result flow and that a scripted defense survived all 31 October seeds. Vercel preview remains pending until the project and token are provisioned.
 
 Open questions for a later iteration: whether to add a leaderboard, how to measure return play without tracking, and whether to promote a second game from `GAMES.md`.

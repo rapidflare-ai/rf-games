@@ -14,7 +14,24 @@ Open <http://localhost:4173> for Circuit Siege or <http://localhost:4173/ten-que
 
 ## Deploy on Vercel
 
-Import this repository as a new Vercel project. The checked-in `vercel.json` selects the `public/` output directory and skips the build. Connect the repository to get preview deployments on pull requests. Publishing to a public domain is a separate Vercel project decision.
+Deployments use the Vercel CLI with a token; **do not import or connect the GitHub repository in Vercel**. The checked-in `vercel.json` serves `public/` without a build step. GitHub Actions deploys same-repository pull requests as previews and pushes to `main` as production.
+
+One-time setup in the Rapidflare Vercel team (install the Vercel CLI first):
+
+1. Create a Vercel token with access to that team and create the project with `vercel project add rf-games --scope rapidflare --token "$VERCEL_TOKEN"`. This creates a Vercel project without connecting Git.
+2. Add that token as the `VERCEL_TOKEN` **Actions secret** in `rapidflare-ai/rf-games`. The token is currently absent from this repository's Actions secrets; existing repositories' secrets cannot be read or copied from GitHub.
+3. Run **Deploy to Vercel** from the Actions tab on `main` for the first production deployment. Later changes deploy automatically on PRs and on `main`.
+4. Verify the generated `vercel.app` URL, including `/updates`. Add a custom domain in Vercel and configure its DNS only when you choose one.
+
+Anyone with the team token can also deploy directly from this checkout after installing the Vercel CLI:
+
+```bash
+# Supply VERCEL_TOKEN in the shell through your secure credential workflow.
+scripts/deploy.sh preview
+scripts/deploy.sh production
+```
+
+The script targets the `rf-games` project in the Rapidflare team. Production deploys publish immediately to any production domain attached to that project. No game runtime secrets are needed.
 
 The games are kept out of search so they never crowd the Rapidflare brand's results: every page has `<meta name="robots" content="noindex">` and `vercel.json` sends `X-Robots-Tag: noindex` on every file. Do not add a `robots.txt` that blocks crawlers; a blocked crawler cannot see the noindex, and link previews would break. Sharing still works through the Open Graph and Twitter card tags.
 

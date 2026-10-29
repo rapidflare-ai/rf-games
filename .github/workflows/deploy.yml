@@ -1,0 +1,64 @@
+name: Deploy to Vercel
+
+# The Vercel project is created with the CLI and has no Git repository import.
+# A PR receives a preview; main receives production. See README.md for setup.
+on:
+  push:
+    branches: [main]
+    paths:
+      - public/**
+      - vercel.json
+      - scripts/deploy.sh
+      - .github/workflows/deploy.yml
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - public/**
+      - vercel.json
+      - scripts/deploy.sh
+      - .github/workflows/deploy.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vercel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: >-
+      github.event_name != 'pull_request'
+      || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the commit being deployed
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Check game rules
+        run: node --test tests/*.test.mjs
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@59.1.4
+
+      - name: Deploy static site
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == pull_request || "$GITHUB_REF" != refs/heads/main ]]; then
+            target=preview
+          else
+            target=production
+          fi
+          url="$(scripts/deploy.sh "$target")"
+          echo "$url"
+          echo "**${target^} deployment:** $url" >> "$GITHUB_STEP_SUMMARY"
