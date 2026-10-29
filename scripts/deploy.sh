@@ -17,10 +17,14 @@ fi
 
 cd "$(dirname "$0")/.."
 
+# The org and project IDs pick the team and project, as in rf-marketing-website's deploy.
+# Passing --scope as well makes the CLI look the token's user up first, which fails
+# with "User not found (404)" for tokens that work fine for deploying.
 export VERCEL_ORG_ID=team_9M9iwOU6o3Njuzwov6Joyu4N
 export VERCEL_PROJECT_ID=prj_Nxhpn44ev8VI0sOu2G97z2TsT95N # rf-games
+export VERCEL_TELEMETRY_DISABLED=1
 
-args=(deploy --yes --archive=tgz --scope rapidflare --token "$VERCEL_TOKEN")
+args=(deploy --yes --archive=tgz --token "$VERCEL_TOKEN")
 if [[ "$target" == production ]]; then
   args+=(--prod)
 fi
