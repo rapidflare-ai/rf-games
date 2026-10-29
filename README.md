@@ -14,7 +14,24 @@ Open <http://localhost:4173> for Circuit Siege or <http://localhost:4173/ten-que
 
 ## Deploy on Vercel
 
-Import this repository as a new Vercel project. The checked-in `vercel.json` selects the `public/` output directory and skips the build. Connect the repository to get preview deployments on pull requests. Publishing to a public domain is a separate Vercel project decision.
+Deployments use the Vercel CLI with a token; **do not import or connect the GitHub repository in Vercel**. The checked-in `vercel.json` serves `public/` without a build step. GitHub Actions deploys same-repository pull requests as previews and pushes to `main` as production.
+
+One-time setup in the Rapidflare Vercel team (install the Vercel CLI first):
+
+1. The `rf-games` project already exists in the team, created without a Git connection. If it ever needs recreating, use `vercel project add rf-games --scope rapidflare --token "$VERCEL_TOKEN"`. The deploy script targets it by project ID; update `scripts/deploy.sh` if it is recreated.
+2. Create a Vercel token with access to the team and add it as the `VERCEL_TOKEN` **Actions secret** in `rapidflare-ai/rf-games`. Existing repositories' secrets cannot be read or copied from GitHub.
+3. Rerun PR #2's preview workflow after adding the secret. Merging that PR into `main` triggers the first production deployment automatically. Use **Deploy to Vercel → Run workflow** on `main` only if a manual retry is needed.
+4. Verify the generated `vercel.app` URL: both games, `/updates`, and the `X-Robots-Tag: noindex` header. Then add `games.rapidflare.ai` under the project's Domains and create the DNS record Vercel shows.
+
+Anyone with the team token can also deploy directly from this checkout after installing the Vercel CLI:
+
+```bash
+# Supply VERCEL_TOKEN in the shell through your secure credential workflow.
+scripts/deploy.sh preview
+scripts/deploy.sh production
+```
+
+The script targets the `rf-games` project in the Rapidflare team. Production deploys publish immediately to any production domain attached to that project. No game runtime secrets are needed.
 
 The games are kept out of search so they never crowd the Rapidflare brand's results: every page has `<meta name="robots" content="noindex">` and `vercel.json` sends `X-Robots-Tag: noindex` on every file. Do not add a `robots.txt` that blocks crawlers; a blocked crawler cannot see the noindex, and link previews would break. Sharing still works through the Open Graph and Twitter card tags.
 
