@@ -10,7 +10,7 @@ Create a small, public, phone-friendly web game line with a distinctive electron
 - The game runs on mobile web and deploys as a lightweight static site on Vercel.
 - Themes are data-driven so the same rules can wear Halloween, winter holiday, or other timely skins. One theme is set live in code; upcoming themes appear as disabled “coming soon” choices. Styling must never change the fairness of a daily challenge.
 - Keep the villain and characters original. Satire can target the idea of overconfident frontier AI without copying a real company's name, mark, mascot, or a film character.
-- Rapidflare appears only in the linked footer credit: “Designed and designed for fun by Rapidflare.” Marketing and hosting can make the connection outside the game.
+- Rapidflare appears only in the linked footer credit: “Designed for fun by Rapidflare. No AI was harmed in the making of this game.” Marketing and hosting can make the connection outside the game.
 
 ## First release: Haunted Circuit Siege
 
