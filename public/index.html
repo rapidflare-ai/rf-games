@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#141023">
+    <meta name="description" content="A tiny daily arcade game. Help Patch repair friendly craft and launch them against a frontier AI's ghouls.">
+    <meta property="og:title" content="Haunted Circuit Siege">
+    <meta property="og:description" content="Patch needs your help. Repair friendly craft, launch them, and stop the frontier AI's ghouls.">
+    <meta property="og:type" content="website">
+    <title>Haunted Circuit Siege · Rapid Games</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/style.css">
+    <script type="module" src="/game.mjs"></script>
+  </head>
+  <body data-theme="halloween">
+    <div class="page-shell">
+      <header class="masthead">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">▣</span><span>RAPID GAMES <small>/ 001</small></span></div>
+        <label class="theme-picker">THEMES
+          <select id="theme-select" aria-label="Current and upcoming themes"></select>
+        </label>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="game-title">
+          <div class="signal-label"><span class="signal-dot"></span><span id="eyebrow">OCTOBER TRANSMISSION · 01</span></div>
+          <h1 id="game-title">HAUNTED<br><span>CIRCUIT SIEGE</span></h1>
+          <p id="subtitle" class="subtitle">Frontier AI raised an army of ghouls. Patch is on our side.</p>
+        </section>
+
+        <section class="cabinet" aria-label="Game cabinet">
+          <div class="cabinet-top">
+            <div class="cabinet-id"><span class="status-light"></span><span id="cabinet-label">DAILY DEFENSE</span><span id="day-label" class="day-label"></span></div>
+            <div class="hud" aria-label="Game status">
+              <span title="Shelter integrity">CORE <strong id="core-value">♥ ♥ ♥</strong></span>
+              <span title="Friendly craft launched">LAUNCHED <strong id="launches-value">0</strong></span>
+              <span title="Machines stopped">STOPPED <strong id="kills-value">0/19</strong></span>
+            </div>
+          </div>
+
+          <div id="game-board" class="board" aria-label="Three defense lanes">
+            <div class="board-grid" aria-hidden="true"></div>
+            <div class="core-tower" aria-hidden="true"><span>HUMAN<br>SHELTER</span><i></i></div>
+            <div class="moon" aria-hidden="true"></div>
+            <div class="lane-list">
+              <button class="lane selected" type="button" data-lane="0" aria-label="Select scout drone bay">
+                <span class="lane-name">01 <b>ROOFTOPS</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">✦</span><span class="bay-detail"><strong>SCOUT DRONE</strong><small class="requirement">POSITION UNKNOWN</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
+              </button>
+              <button class="lane" type="button" data-lane="1" aria-label="Select fighter jet bay">
+                <span class="lane-name">02 <b>MAIN ST.</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">➤</span><span class="bay-detail"><strong>FIGHTER JET</strong><small class="requirement">EXPANSION BUS MISSING</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
+              </button>
+              <button class="lane" type="button" data-lane="2" aria-label="Select rescue rover bay">
+                <span class="lane-name">03 <b>SUBSTATION</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">▣</span><span class="bay-detail"><strong>RESCUE ROVER</strong><small class="requirement">POWER DEPLETED</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
+              </button>
+            </div>
+            <div id="screen-overlay" class="screen-overlay">
+              <div class="overlay-card" id="intro-card">
+                <div class="tiny-kicker">INCOMING TRANSMISSION</div>
+                <div class="ai-avatar" aria-hidden="true"><span>◉ ◉</span><b>PATCH</b></div>
+                <h2 id="intro-heading">PATCH HAS A PLAN.<br><em>YOU HAVE THE PARTS.</em></h2>
+                <p id="story">Patch, a friendly AI, scans each craft for faults. Read the diagnostic, choose the component that solves it, and launch from the shelter to stop the ghouls.</p>
+                <div class="intro-actions">
+                  <button id="daily-start" class="primary-button" type="button">PLAY TODAY'S WAVE <span>↗</span></button>
+                  <button id="practice-start" class="text-button" type="button">PRACTICE RUN <span>→</span></button>
+                </div>
+              </div>
+              <div class="overlay-card result-card hidden" id="result-card" aria-live="polite">
+                <div class="tiny-kicker" id="result-kicker">TRANSMISSION COMPLETE</div>
+                <h2 id="result-heading">SHELTER SECURED</h2>
+                <p id="result-story"></p>
+                <div class="result-stats"><div><small>STOPPED</small><strong id="result-kills">0/19</strong></div><div><small>CORE</small><strong id="result-core">♥ ♥ ♥</strong></div><div><small>SCORE</small><strong id="result-score">0000</strong></div></div>
+                <p id="best-line" class="best-line"></p>
+                <div class="intro-actions">
+                  <button id="share-button" class="primary-button" type="button">SHARE RESULT <span>↗</span></button>
+                  <button id="retry-button" class="text-button" type="button">RETRY WAVE <span>→</span></button>
+                </div>
+                <button id="home-button" class="home-button" type="button">← BACK TO MENU</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-panel">
+            <div class="panel-title"><span class="patch-face" aria-hidden="true">◉ ◉<small>PATCH</small></span><span>PATCH'S REPAIR BAY<small id="selected-bay" class="selected-bay">SCOUT DRONE · POSITION UNKNOWN</small></span><button id="assist-button" class="assist-button" type="button">PATCH ASSIST ×3</button></div>
+            <div class="parts-title"><span>COMPONENT TRAY</span><span>SOLVE THE DIAGNOSTIC</span></div>
+            <div class="parts-tray">
+              <button type="button" class="part" data-part="gps"><span class="part-icon">⌁</span><span>GPS<br>ANTENNA</span></button>
+              <button type="button" class="part" data-part="sensor"><span class="part-icon">◉</span><span>OPTICAL<br>SENSOR</span></button>
+              <button type="button" class="part" data-part="pcie"><span class="part-icon">▤</span><span>PCIe<br>UPGRADE</span></button>
+              <button type="button" class="part" data-part="jammer"><span class="part-icon">⌗</span><span>SIGNAL<br>JAMMER</span></button>
+              <button type="button" class="part" data-part="power"><span class="part-icon">ϟ</span><span>POWER<br>CELL</span></button>
+            </div>
+            <div class="launch-row"><button id="launch-button" class="launch-button" type="button" disabled>REPAIR TO LAUNCH <span>→</span></button><span id="patch-message" class="patch-message" role="status">PATCH: Read the diagnostic and choose a component that solves it. I can help three times.</span></div>
+          </div>
+        </section>
+
+        <div class="below-cabinet"><div><span class="micro-label">HOW TO PLAY</span><p>Tap a craft bay and read its fault. Choose the component that fixes it, then launch your craft from the shelter. The fighter needs two repairs. Wrong fits cost points; Patch can fit three parts for you.</p></div><div class="daily-note"><span class="micro-label">ONE WAVE. EVERY DAY.</span><p>The daily wave is the same worldwide until midnight UTC. Practice runs are unlimited. No account needed.</p></div></div>
+        <aside class="updates-callout"><div><span class="micro-label">NEXT TRANSMISSION</span><p>Want to hear when the next seasonal game is ready?</p></div><a href="/updates.html">GET GAME UPDATES <span aria-hidden="true">↗</span></a></aside>
+      </main>
+
+      <footer>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.</footer>
+    </div>
+  </body>
+</html>
