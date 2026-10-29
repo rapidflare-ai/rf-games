@@ -1,14 +1,45 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createGame, DIAGNOSTICS, installPart, launchCraft, makeScenario, neededPart, score, seedFromText, tick, useAssist, utcDayKey } from '../public/engine.mjs';
+import { createGame, DIAGNOSTICS, ENEMIES, installPart, launchCraft, makeScenario, neededPart, score, seedFromText, tick, urgentLane, useAssist, utcDayKey } from '../public/engine.mjs';
 import { ACTIVE_THEME, THEMES } from '../public/themes.mjs';
 
 test('daily seeds and waves are stable across clients', () => {
   assert.equal(utcDayKey(new Date('2026-10-29T23:59:00-07:00')), '2026-10-30');
-  const seed = seedFromText('circuit-siege-v2:2026-10-29');
+  const seed = seedFromText('circuit-siege-v3:2026-10-29');
   assert.deepEqual(makeScenario(seed), makeScenario(seed));
   assert.notDeepEqual(makeScenario(seed), makeScenario(seed + 1));
   assert.equal(makeScenario(seed).length, 16);
+  assert.deepEqual(new Set(makeScenario(seed).map((entry) => entry.kind)), new Set(Object.keys(ENEMIES)));
+});
+
+test('a steady player making one move every 1.6 seconds holds the shelter all October', () => {
+  for (let day = 1; day <= 31; day += 1) {
+    const game = createGame(seedFromText(`circuit-siege-v3:2026-10-${String(day).padStart(2, '0')}`));
+    let lane = 0;
+    let wait = 1.6;
+    while (game.status === 'running' && game.elapsed < 300) {
+      tick(game, 0.05);
+      wait -= 0.05;
+      if (wait > 0) continue;
+      wait = 1.6;
+      const target = urgentLane(game);
+      if (target !== lane) lane = target;
+      else if (game.bays[lane].ready) launchCraft(game, lane);
+      else installPart(game, lane, neededPart(game, lane));
+    }
+    assert.ok(game.core > 0, `October ${day} is survivable`);
+  }
+});
+
+test('staggering ghouls lurch but still arrive', () => {
+  const game = createGame(4);
+  game.wave = [];
+  game.bots = [{ id: 1, lane: 0, kind: 'stagger', x: 0.5, hp: 1, maxHp: 1, speed: ENEMIES.stagger.speed, stagger: ENEMIES.stagger.stagger }];
+  const positions = [];
+  for (let step = 0; step < 20; step += 1) { tick(game, 0.1); positions.push(game.bots[0].x); }
+  const moves = positions.slice(1).map((x, index) => positions[index] - x);
+  assert.ok(Math.max(...moves) > Math.min(...moves) * 1.5);
+  assert.ok(moves.every((move) => move > 0));
 });
 
 test('a craft accepts its requested part and changes needs after launch', () => {

@@ -21,10 +21,12 @@ export const CRAFTS = Object.freeze([
   { kind: 'rover', name: 'Rescue rover', icon: '▣', damage: 1, speed: 0.54 },
 ]);
 
-const ENEMIES = Object.freeze({
-  drone: { hp: 1, speed: 0.101 },
-  runner: { hp: 1, speed: 0.138 },
-  brute: { hp: 2, speed: 0.074 },
+// Speeds are lane widths per second. Staggering ghouls doze off, then lurch forward.
+export const ENEMIES = Object.freeze({
+  drone: { hp: 1, speed: 0.056 },
+  runner: { hp: 1, speed: 0.076 },
+  brute: { hp: 2, speed: 0.041 },
+  stagger: { hp: 1, speed: 0.062, stagger: 1.2 },
 });
 
 export function utcDayKey(date = new Date()) {
@@ -54,7 +56,7 @@ function randomFromSeed(seed) {
 export function makeScenario(seed) {
   const random = randomFromSeed(seed);
   const wave = [];
-  let at = 1.4;
+  let at = 2.2;
   let previousLane = -1;
   let repeat = 0;
   for (let index = 0; index < 16; index += 1) {
@@ -62,10 +64,12 @@ export function makeScenario(seed) {
     if (lane === previousLane && repeat >= 2) lane = (lane + 1 + Math.floor(random() * 2)) % LANE_COUNT;
     repeat = lane === previousLane ? repeat + 1 : 1;
     previousLane = lane;
-    const kind = index >= 4 && index % 5 === 4 ? 'brute' : index >= 3 && index % 4 === 3 ? 'runner' : 'drone';
+    const kind = index >= 4 && index % 5 === 4 ? 'brute'
+      : index >= 3 && index % 4 === 3 ? 'runner'
+        : index >= 2 && index % 3 === 2 ? 'stagger' : 'drone';
     wave.push({ id: index, at: Number(at.toFixed(2)), lane, kind });
-    at += 2.4 + random() * 0.7;
-    if (index === 7) at += 1.2;
+    at += 3.9 + random() * 1.0;
+    if (index === 7) at += 1.6;
   }
   return wave;
 }
@@ -118,7 +122,7 @@ export function installPart(game, lane, part) {
 export function useAssist(game, lane) {
   if (game.status !== 'running') return { ok: false, reason: 'Round is over' };
   if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_COUNT) return { ok: false, reason: 'Choose a bay' };
-  if (game.assists <= 0) return { ok: false, reason: 'Patch is recharging' };
+  if (game.assists <= 0) return { ok: false, reason: 'Flare is recharging' };
   if (game.bays[lane].ready) return { ok: false, reason: 'Craft ready to launch' };
   const part = neededPart(game, lane);
   game.assists -= 1;
@@ -149,12 +153,15 @@ export function tick(game, seconds) {
   while (game.spawnIndex < game.wave.length && game.wave[game.spawnIndex].at <= game.elapsed) {
     const entry = game.wave[game.spawnIndex];
     const stats = ENEMIES[entry.kind];
-    game.bots.push({ ...entry, x: 1.04, hp: stats.hp, maxHp: stats.hp, speed: stats.speed });
+    game.bots.push({ ...entry, x: 1.04, hp: stats.hp, maxHp: stats.hp, speed: stats.speed, stagger: stats.stagger ?? 0 });
     game.events.push({ type: 'spawn', lane: entry.lane, kind: entry.kind });
     game.spawnIndex += 1;
   }
 
-  for (const bot of game.bots) bot.x -= bot.speed * dt;
+  for (const bot of game.bots) {
+    const lurch = bot.stagger ? Math.max(0.08, 1 + bot.stagger * Math.sin(game.elapsed * 1.4 + bot.id)) : 1;
+    bot.x -= bot.speed * lurch * dt;
+  }
   for (const shot of game.shots) shot.x += shot.speed * dt;
 
   const spentShots = new Set();
@@ -175,7 +182,7 @@ export function tick(game, seconds) {
       game.events.push({ type: 'kill', lane: bot.lane, kind: bot.kind });
     } else if (bot.x <= 0.035) {
       game.core = Math.max(0, game.core - 1);
-      game.events.push({ type: 'breach', lane: bot.lane });
+      game.events.push({ type: 'breach', lane: bot.lane, kind: bot.kind });
     }
   }
   game.bots = game.bots.filter((bot) => bot.hp > 0 && bot.x > 0.035);

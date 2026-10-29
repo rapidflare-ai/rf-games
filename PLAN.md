@@ -1,6 +1,6 @@
 # Plan and handoff
 
-Updated: 2026-10-29.
+Updated: 2026-10-29 (second game, accessibility and sound pass).
 
 ## Current status
 
@@ -8,16 +8,22 @@ Updated: 2026-10-29.
 - [x] Capture product direction in `GOAL.md` and candidate games in `GAMES.md`.
 - [x] Implement and verify Haunted Circuit Siege.
 - [x] Publish the implementation branch and open [PR #1](https://github.com/rapidflare-ai/rf-games/pull/1).
-- [x] Replace explicit component requests with fault diagnostics that players solve, with Patch as a limited assist.
+- [x] Replace explicit component requests with fault diagnostics that players solve, with the friendly AI (now Flare) as a limited assist.
 - [x] Set Halloween as the active theme in code and show disabled upcoming themes in the selector.
 - [x] Add an Updates page that explains future launch emails and clearly states signup is not available yet.
-- [ ] Connect the GitHub repository to Vercel and choose a public domain when ready. The local Vercel CLI currently reports an invalid token, so repository import needs a refreshed Vercel login or an existing team integration.
+- [x] Rename the friendly AI to Flare and the ghouls to Chat al Ghoul, Doppelghoul, Clod and Grog; add Grog as a fourth enemy that dozes off and lurches, and give Clod a stomp.
+- [x] Slow Circuit Siege down: a simulated player making one move every 1.6 s now survives every October seed (it needed one move a second before).
+- [x] Add pause, keyboard shortcuts for every action, focus management, synthesized sound with a mute toggle, and a shared GAME menu.
+- [x] Build Ten Questions Till Dawn with 100 pre-written puzzles and a daily rotation through all of them.
+- [x] Keep the games out of search (noindex meta and header), add share cards with rendered images, and add a parody disclaimer.
+- [x] Replace the crowded landing pages with a first-visit splash and an on-demand help panel; draw Flare as a blue flame holding a wrench (Circuit Siege) or a question sign (Ten Questions).
+- [ ] Connect the GitHub repository to Vercel and choose a public domain when ready. The share tags assume `games.rapidflare.ai`; update them if a different address is chosen. The local Vercel CLI currently reports an invalid token, so repository import needs a refreshed Vercel login or an existing team integration.
 
 ## First-release scope
 
 1. Keep game logic independent of presentation, with seeded UTC daily waves and unseeded practice.
 2. Build a touch-first arcade interface with three craft bays, changing fault diagnostics, an explicit launch step, visible threats, and a short first-play explanation.
-3. Make Patch useful through fault clues and three automatic component fits per round. Give seasonal enemies distinct art, nicknames, and subtle AI badges.
+3. Make Flare useful through fault clues and three automatic component fits per round. Give seasonal enemies distinct art, nicknames, and subtle AI badges.
 4. Add seasonal themes, a result share flow, and local best-result persistence.
 5. Check the deterministic rules, phone layout, keyboard flow, and static deployment configuration.
 
