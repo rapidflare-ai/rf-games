@@ -8,12 +8,18 @@
     <title>Game updates · Rapid Games</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/style.css">
+    <script type="module">import { setupSite } from '/site.mjs'; setupSite(null);</script>
   </head>
   <body data-theme="halloween">
     <div class="page-shell updates-page">
       <header class="masthead">
         <div class="brand"><span class="brand-mark" aria-hidden="true">▣</span><span>RAPID GAMES <small>/ UPDATES</small></span></div>
-        <a class="back-link" href="/">← BACK TO GAME</a>
+        <div class="masthead-tools">
+          <nav class="game-picker" aria-label="Games">
+            <button id="game-menu-button" class="menu-button" type="button" aria-expanded="false" aria-controls="game-menu"><span class="menu-kicker">GAMES</span> <span class="menu-current">CHOOSE</span> <span aria-hidden="true">▾</span></button>
+            <ul id="game-menu" class="game-menu" hidden></ul>
+          </nav>
+        </div>
       </header>
       <main class="updates-main">
         <div class="signal-label"><span class="signal-dot"></span>NEXT TRANSMISSION</div>
@@ -28,7 +34,7 @@
             <small>Signups are coming soon. We aren’t collecting email addresses yet.</small>
           </div>
         </div>
-        <a class="back-link back-bottom" href="/">← PLAY HAUNTED CIRCUIT SIEGE</a>
+        <a class="back-link back-bottom" href="/">← BACK TO THE GAMES</a>
       </main>
       <footer>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.</footer>
     </div>

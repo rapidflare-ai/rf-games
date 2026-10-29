@@ -1,23 +1,28 @@
 import { CRAFTS, createGame, DIAGNOSTICS, installPart, launchCraft, LANE_COUNT, neededPart, PARTS, score, seedFromText, tick, urgentLane, useAssist, utcDayKey } from './engine.mjs';
-import { ACTIVE_THEME, THEMES } from './themes.mjs';
+import { sfx } from './audio.mjs';
+import { focusIsOnControl, keyBelongsToControl, setupSite } from './site.mjs';
+import { ACTIVE_THEME, paintGhoul, THEMES } from './themes.mjs';
 
 const $ = (id) => document.getElementById(id);
 const lanes = [...document.querySelectorAll('.lane')];
 const parts = [...document.querySelectorAll('.part')];
 const themeSelect = $('theme-select');
 const overlay = $('screen-overlay');
-const intro = $('intro-card');
-const result = $('result-card');
+const cards = { intro: $('intro-card'), pause: $('pause-card'), result: $('result-card') };
 const dayKey = utcDayKey();
 const themeName = ACTIVE_THEME;
+const STOMP_SECONDS = 0.9;
 let selectedLane = 0;
 let game = null;
 let mode = 'daily';
-let activeSeed = seedFromText(`circuit-siege-v2:${dayKey}`);
+let activeSeed = seedFromText(`circuit-siege-v3:${dayKey}`);
 let frame = 0;
 let lastFrame = 0;
 let lastRender = 0;
 let lastHint = 0;
+let lastStomp = 0;
+let paused = false;
+let focusBeforePause = null;
 const botNodes = new Map();
 const shotNodes = new Map();
 
@@ -32,6 +37,31 @@ function writeStorage(key, value) {
 function prettyDay(key) {
   const [year, month, day] = key.split('-');
   return `${month}.${day}.${year}`;
+}
+
+// Show one overlay card (or none) and keep the controls behind it out of the tab order.
+function showCard(name) {
+  for (const [key, card] of Object.entries(cards)) card.classList.toggle('hidden', key !== name);
+  overlay.classList.toggle('hidden', !name);
+  document.querySelector('.lane-list').inert = Boolean(name);
+  document.querySelector('.control-panel').inert = Boolean(name);
+}
+
+function fillGhoulFace(node, kind) {
+  paintGhoul(node, themeName, kind);
+  node.querySelector('.bot-label').textContent = THEMES[themeName].enemy[kind];
+}
+
+function renderGhoulList() {
+  const theme = THEMES[themeName];
+  $('ghoul-list').replaceChildren(...['drone', 'runner', 'brute', 'stagger'].map((kind) => {
+    const item = document.createElement('li');
+    item.innerHTML = `<span class="ghoul-chip ${kind}" aria-hidden="true"><span class="enemy-face"></span><span class="ghoul-accessory"></span></span><span><strong></strong><small></small></span>`;
+    paintGhoul(item, themeName, kind);
+    item.querySelector('strong').textContent = theme.enemy[kind];
+    item.querySelector('small').textContent = theme.blurb[kind];
+    return item;
+  }));
 }
 
 function applyTheme() {
@@ -50,37 +80,43 @@ function applyTheme() {
   for (let lane = 0; lane < LANE_COUNT; lane += 1) {
     lanes[lane].querySelector('.lane-name b').textContent = theme.lanes[lane];
   }
-  for (const node of botNodes.values()) {
-    const kind = node.dataset.kind;
-    node.querySelector('.enemy-face').textContent = theme.icon[kind];
-    node.querySelector('.bot-label').textContent = theme.enemy[kind];
-  }
+  for (const node of botNodes.values()) fillGhoulFace(node, node.dataset.kind);
+  renderGhoulList();
   updateHud();
 }
 
+function setHtml(node, html) {
+  if (node.innerHTML !== html) node.innerHTML = html;
+}
+
 function setMessage(message) {
-  $('patch-message').textContent = `PATCH: ${message}`;
+  $('patch-message').textContent = `FLARE: ${message}`;
 }
 
 function updateHud() {
   const core = game?.core ?? 3;
+  const running = game?.status === 'running';
   $('core-value').textContent = `${'♥ '.repeat(core)}${'♡ '.repeat(3 - core)}`.trim();
   $('launches-value').textContent = String(game?.launches ?? 0);
   $('kills-value').textContent = `${game?.kills ?? 0}/${game?.wave.length ?? 16}`;
-  $('cabinet-label').textContent = game?.status === 'running' && mode === 'practice' ? 'PRACTICE DEFENSE' : 'DAILY DEFENSE';
-  $('day-label').textContent = game?.status === 'running' ? `${game.spawnIndex}/${game.wave.length} INCOMING` : prettyDay(dayKey);
+  $('cabinet-label').textContent = running && mode === 'practice' ? 'PRACTICE DEFENSE' : 'DAILY DEFENSE';
+  $('day-label').textContent = running ? `${game.spawnIndex}/${game.wave.length} INCOMING` : prettyDay(dayKey);
+  $('pause-button').disabled = !running;
 
   for (let lane = 0; lane < LANE_COUNT; lane += 1) {
     const bay = game?.bays[lane];
     const requirement = lanes[lane].querySelector('.requirement');
     const card = lanes[lane].querySelector('.bay-card');
     const needed = bay ? neededPart(game, lane) : [['gps'], ['pcie'], ['power']][lane][0];
+    const nearest = game?.bots.filter((bot) => bot.lane === lane).sort((a, b) => a.x - b.x)[0];
+    const threat = nearest ? `. ${THEMES[themeName].enemy[nearest.kind]} ${nearest.x < 0.4 ? 'close to the shelter' : 'approaching'}` : '';
     requirement.textContent = bay?.ready ? 'READY · TAP TO LAUNCH' : DIAGNOSTICS[needed].label;
     card.classList.toggle('ready', Boolean(bay?.ready));
     lanes[lane].classList.toggle('selected', selectedLane === lane);
+    lanes[lane].setAttribute('aria-pressed', String(selectedLane === lane));
     lanes[lane].setAttribute('aria-label', bay?.ready
-      ? `${CRAFTS[lane].name} ready in lane ${lane + 1}. Tap to launch`
-      : `Select ${CRAFTS[lane].name} bay in lane ${lane + 1}. Diagnostic: ${DIAGNOSTICS[needed].label}`);
+      ? `Lane ${lane + 1}, ${CRAFTS[lane].name} ready. Activate again to launch${threat}`
+      : `Lane ${lane + 1}, ${CRAFTS[lane].name}. Diagnostic: ${DIAGNOSTICS[needed].label}${threat}`);
   }
 
   const selectedBay = game?.bays[selectedLane];
@@ -88,10 +124,12 @@ function updateHud() {
   $('selected-bay').textContent = selectedBay?.ready
     ? `${CRAFTS[selectedLane].name.toUpperCase()} · READY TO LAUNCH`
     : `${CRAFTS[selectedLane].name.toUpperCase()} · ${DIAGNOSTICS[needed].label}`;
-  $('assist-button').textContent = `PATCH ASSIST ×${game?.assists ?? 3}`;
-  $('assist-button').disabled = !game || game.status !== 'running' || game.assists === 0 || Boolean(selectedBay?.ready);
-  $('launch-button').disabled = !game || game.status !== 'running' || !selectedBay?.ready;
-  $('launch-button').innerHTML = selectedBay?.ready ? `LAUNCH ${CRAFTS[selectedLane].name.toUpperCase()} <span>→</span>` : 'REPAIR TO LAUNCH <span>→</span>';
+  setHtml($('assist-button'), `FLARE ASSIST ×${game?.assists ?? 3} <kbd aria-hidden="true">A</kbd>`);
+  $('assist-button').disabled = !running || game.assists === 0 || Boolean(selectedBay?.ready);
+  $('launch-button').disabled = !running || !selectedBay?.ready;
+  setHtml($('launch-button'), selectedBay?.ready
+    ? `LAUNCH ${CRAFTS[selectedLane].name.toUpperCase()} <kbd aria-hidden="true">Space</kbd>`
+    : 'REPAIR TO LAUNCH <span>→</span>');
 }
 
 function renderActors() {
@@ -105,9 +143,8 @@ function renderActors() {
       node.className = `bot ${bot.kind}`;
       node.dataset.kind = bot.kind;
       node.setAttribute('aria-hidden', 'true');
-      node.innerHTML = '<span class="bot-health"></span><span class="enemy-face"></span><span class="ai-stamp">AI</span><span class="bot-label"></span>';
-      node.querySelector('.enemy-face').textContent = THEMES[themeName].icon[bot.kind];
-      node.querySelector('.bot-label').textContent = THEMES[themeName].enemy[bot.kind];
+      node.innerHTML = '<span class="bot-health"></span><span class="enemy-face"></span><span class="ghoul-accessory"></span><span class="ai-stamp">AI</span><span class="bot-label"></span>';
+      fillGhoulFace(node, bot.kind);
       lanes[bot.lane].querySelector('.bot-layer').append(node);
       botNodes.set(bot.id, node);
     }
@@ -138,29 +175,46 @@ function renderActors() {
 }
 
 function handleEvents(events) {
-  if (events.some((event) => event.type === 'breach')) {
-    setMessage('The shelter took a hit. Launch into that lane!');
+  const enemy = THEMES[themeName].enemy;
+  const breach = events.find((event) => event.type === 'breach');
+  if (breach) {
+    sfx.breach();
+    setMessage(breach.kind === 'brute'
+      ? `${enemy.brute} SMASH! The shelter took a hit in lane ${breach.lane + 1}.`
+      : `The shelter took a hit in lane ${breach.lane + 1}. Launch into that lane!`);
   } else if (events.some((event) => event.type === 'kill')) {
+    sfx.hit();
     setMessage('Direct hit. Humans and friendly AI make a good team.');
-  } else if (events.some((event) => event.type === 'spawn') && game.elapsed - lastHint > 3.5) {
-    setMessage(`Frontier AI ${THEMES[themeName].enemy[game.bots.at(-1)?.kind] || 'forces'} incoming. Check lane ${urgentLane(game) + 1}.`);
-    lastHint = game.elapsed;
+  } else if (events.some((event) => event.type === 'hit')) {
+    sfx.hit();
+    setMessage(`Hit! ${enemy.brute} shrugged it off. One more.`);
+  } else if (events.some((event) => event.type === 'spawn')) {
+    sfx.spawn();
+    if (game.elapsed - lastHint > 3.5) {
+      const spawned = events.filter((event) => event.type === 'spawn').at(-1);
+      setMessage(`${enemy[spawned.kind]} incoming in lane ${spawned.lane + 1}. Most urgent: lane ${urgentLane(game) + 1}.`);
+      lastHint = game.elapsed;
+    }
   }
   if (game.status === 'finished') finishRound();
 }
 
 function loop(timestamp) {
-  if (!game || game.status !== 'running') return;
+  if (!game || game.status !== 'running' || paused) return;
   const seconds = Math.min((timestamp - lastFrame) / 1000 || 0, 0.12);
   lastFrame = timestamp;
   const events = tick(game, seconds);
+  if (game.bots.some((bot) => bot.kind === 'brute') && game.elapsed - lastStomp >= STOMP_SECONDS) {
+    sfx.stomp();
+    lastStomp = game.elapsed;
+  }
   if (timestamp - lastRender > 33 || events.length) {
     renderActors();
     updateHud();
     lastRender = timestamp;
   }
   if (events.length) handleEvents(events);
-  if (game.status === 'running') frame = requestAnimationFrame(loop);
+  if (game.status === 'running' && !paused) frame = requestAnimationFrame(loop);
 }
 
 function freshPracticeSeed() {
@@ -181,19 +235,21 @@ function resetActors() {
 function startRound(requestedMode, seed) {
   cancelAnimationFrame(frame);
   mode = requestedMode;
-  activeSeed = seed ?? (mode === 'daily' ? seedFromText(`circuit-siege-v2:${dayKey}`) : freshPracticeSeed());
+  activeSeed = seed ?? (mode === 'daily' ? seedFromText(`circuit-siege-v3:${dayKey}`) : freshPracticeSeed());
   game = createGame(activeSeed, mode);
   selectedLane = 0;
   lastHint = 0;
+  lastStomp = 0;
+  paused = false;
   resetActors();
-  overlay.classList.add('hidden');
-  intro.classList.add('hidden');
-  result.classList.add('hidden');
+  showCard(null);
   setMessage(`${DIAGNOSTICS[neededPart(game, 0)].hint} Pick a component that solves it. I can help three times.`);
   updateHud();
+  sfx.select();
   lastFrame = performance.now();
   lastRender = 0;
   frame = requestAnimationFrame(loop);
+  lanes[0].focus({ preventScroll: true });
   if (window.matchMedia('(max-width: 720px)').matches) {
     document.querySelector('.cabinet').scrollIntoView({
       block: 'start',
@@ -202,12 +258,33 @@ function startRound(requestedMode, seed) {
   }
 }
 
+function pauseRound() {
+  if (!game || game.status !== 'running' || paused) return;
+  paused = true;
+  cancelAnimationFrame(frame);
+  focusBeforePause = document.activeElement;
+  showCard('pause');
+  setMessage('Paused. Press Escape or Resume when you are ready.');
+  $('resume-button').focus();
+}
+
+function resumeRound() {
+  if (!game || game.status !== 'running' || !paused) return;
+  paused = false;
+  showCard(null);
+  setMessage('Back in action.');
+  lastFrame = performance.now();
+  frame = requestAnimationFrame(loop);
+  (focusBeforePause?.isConnected && !focusBeforePause.closest('.screen-overlay') ? focusBeforePause : lanes[selectedLane]).focus({ preventScroll: true });
+}
+
 function finishRound() {
   cancelAnimationFrame(frame);
   renderActors();
   updateHud();
   const won = game.core > 0;
   const points = score(game);
+  if (won) sfx.win(); else sfx.lose();
   $('result-kicker').textContent = won ? 'TRANSMISSION COMPLETE' : 'SIGNAL LOST';
   $('result-heading').textContent = won ? 'SHELTER SECURED' : 'SHELTER BREACHED';
   $('result-story').textContent = won ? THEMES[themeName].victory : THEMES[themeName].defeat;
@@ -216,7 +293,7 @@ function finishRound() {
   $('result-score').textContent = String(points).padStart(4, '0');
   let bestText = mode === 'daily' ? 'Daily wave · UTC' : 'Practice run';
   if (mode === 'daily') {
-    const key = `rf-games-best-v2:${dayKey}`;
+    const key = `rf-games-best-v3:${dayKey}`;
     const prior = Number(readStorage(key) || 0);
     if (points > prior) {
       writeStorage(key, String(points));
@@ -224,29 +301,27 @@ function finishRound() {
     } else bestText = `YOUR DAILY BEST · ${prior}`;
   }
   $('best-line').textContent = bestText;
-  intro.classList.add('hidden');
-  result.classList.remove('hidden');
-  overlay.classList.remove('hidden');
+  showCard('result');
   $('share-button').focus();
 }
 
 function returnHome() {
   cancelAnimationFrame(frame);
   game = null;
+  paused = false;
   selectedLane = 0;
   resetActors();
-  intro.classList.remove('hidden');
-  result.classList.add('hidden');
-  overlay.classList.remove('hidden');
+  showCard('intro');
   setMessage('Select a bay, read its diagnostic, fit the right part, then launch. I can help three times.');
   updateHud();
+  $('daily-start').focus();
 }
 
 function shareText() {
   const hearts = '♥'.repeat(game.core) + '♡'.repeat(3 - game.core);
   const title = mode === 'daily' ? `Circuit Siege · ${dayKey} UTC` : 'Circuit Siege · practice';
   const verdict = game.core > 0 ? 'Shelter secured' : 'Shelter breached';
-  return `${title}\n${verdict} ${hearts}\n${game.kills}/${game.wave.length} ghouls stopped · ${game.launches} friendly craft launched · ${score(game)} points\nPatch and I held the line. Can you?`;
+  return `${title}\n${verdict} ${hearts}\n${game.kills}/${game.wave.length} ghouls stopped · ${game.launches} friendly craft launched · ${score(game)} points\nFlare and I held the line. Can you?`;
 }
 
 async function shareResult() {
@@ -260,7 +335,7 @@ async function shareResult() {
     }
     await navigator.clipboard.writeText(`${text}\n${url}`);
     $('share-button').innerHTML = 'COPIED! <span>✓</span>';
-    setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <span>↗</span>'; }, 1800);
+    setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
   } catch (error) {
     if (error?.name === 'AbortError') return;
     setMessage('Sharing is unavailable in this browser. Try copying the page link.');
@@ -268,29 +343,46 @@ async function shareResult() {
 }
 
 function selectLane(lane) {
-  selectedLane = lane;
+  if (!game || game.status !== 'running' || paused) return;
+  selectedLane = (lane + LANE_COUNT) % LANE_COUNT;
+  sfx.click();
   updateHud();
-  const needed = neededPart(game, lane);
-  setMessage(needed ? `${CRAFTS[lane].name}: ${DIAGNOSTICS[needed].hint}` : `${CRAFTS[lane].name} is ready. Launch it!`);
+  const needed = neededPart(game, selectedLane);
+  setMessage(needed ? `Lane ${selectedLane + 1}, ${CRAFTS[selectedLane].name}: ${DIAGNOSTICS[needed].hint}` : `${CRAFTS[selectedLane].name} is ready. Launch it!`);
 }
 
 function installSelected(part) {
-  if (!game || game.status !== 'running') return;
+  if (!game || game.status !== 'running' || paused) return;
   const response = installPart(game, selectedLane, part);
   if (response.ok) {
+    sfx.good();
     setMessage(response.ready
-      ? `${CRAFTS[selectedLane].name} repaired. Hit LAUNCH!`
+      ? `${CRAFTS[selectedLane].name} repaired. Press Space to launch!`
       : `Good fit. New diagnostic: ${DIAGNOSTICS[response.next].hint}`);
-  } else setMessage(`${response.reason}.`);
+  } else {
+    sfx.bad();
+    setMessage(`${response.reason}.`);
+  }
   updateHud();
 }
 
 function launchSelected() {
-  if (!game || game.status !== 'running') return;
+  if (!game || game.status !== 'running' || paused) return;
   const response = launchCraft(game, selectedLane);
+  if (response.ok) sfx.launch(); else sfx.bad();
   setMessage(response.ok ? `${CRAFTS[selectedLane].name} launched from the shelter!` : `${response.reason}.`);
   updateHud();
   renderActors();
+}
+
+function assistSelected() {
+  if (!game || game.status !== 'running' || paused) return;
+  const response = useAssist(game, selectedLane);
+  if (response.ok) sfx.good(); else sfx.bad();
+  setMessage(response.ok
+    ? response.ready ? `I fitted the ${PARTS[response.part].name}. Craft ready to launch!` : `I fitted the ${PARTS[response.part].name}. Next diagnostic: ${DIAGNOSTICS[response.next].hint}`
+    : `${response.reason}.`);
+  updateHud();
 }
 
 for (const [key, theme] of Object.entries(THEMES)) {
@@ -308,26 +400,52 @@ for (const button of lanes) button.addEventListener('click', () => {
   else selectLane(lane);
 });
 for (const button of parts) button.addEventListener('click', () => installSelected(button.dataset.part));
-$('assist-button').addEventListener('click', () => {
-  if (!game || game.status !== 'running') return;
-  const response = useAssist(game, selectedLane);
-  setMessage(response.ok
-    ? response.ready ? `I fitted ${PARTS[response.part].name}. Craft ready to launch!` : `I fitted ${PARTS[response.part].name}. Next diagnostic: ${DIAGNOSTICS[response.next].hint}`
-    : `${response.reason}.`);
-  updateHud();
-});
+$('assist-button').addEventListener('click', assistSelected);
 $('launch-button').addEventListener('click', launchSelected);
+$('pause-button').addEventListener('click', pauseRound);
+$('resume-button').addEventListener('click', resumeRound);
+$('quit-button').addEventListener('click', returnHome);
+
+const PART_KEYS = { g: 'gps', o: 'sensor', p: 'pcie', j: 'jammer', b: 'power' };
 document.addEventListener('keydown', (event) => {
-  if (event.target === themeSelect || event.altKey || event.metaKey || event.ctrlKey || !game || game.status !== 'running') return;
+  if (keyBelongsToControl(event)) return;
   const key = event.key.toLowerCase();
-  if (/^[1-3]$/.test(key)) selectLane(Number(key) - 1);
-  const shortcuts = { g: 'gps', o: 'sensor', p: 'pcie', j: 'jammer', b: 'power' };
-  if (shortcuts[key]) installSelected(shortcuts[key]);
-  if (key === 'enter' && document.activeElement?.tagName !== 'BUTTON') launchSelected();
+  const visible = (name) => !cards[name].classList.contains('hidden') && !overlay.classList.contains('hidden');
+  if (visible('intro')) {
+    if (key === 'd') { event.preventDefault(); startRound('daily'); }
+    if (key === 'r') { event.preventDefault(); startRound('practice'); }
+    return;
+  }
+  if (visible('result')) {
+    if (key === 'r') { event.preventDefault(); startRound(mode, activeSeed); }
+    if (key === 's') { event.preventDefault(); shareResult(); }
+    if (key === 'escape') { event.preventDefault(); returnHome(); }
+    return;
+  }
+  if (!game || game.status !== 'running') return;
+  if (key === 'escape') { event.preventDefault(); if (paused) resumeRound(); else pauseRound(); return; }
+  if (paused) return;
+  if (/^[1-3]$/.test(key)) { event.preventDefault(); selectLane(Number(key) - 1); }
+  else if (key === 'arrowup' || key === 'arrowdown') {
+    event.preventDefault();
+    selectLane(selectedLane + (key === 'arrowup' ? -1 : 1));
+    if (document.activeElement?.classList.contains('lane')) lanes[selectedLane].focus({ preventScroll: true });
+  } else if (PART_KEYS[key]) { event.preventDefault(); installSelected(PART_KEYS[key]); }
+  else if (key === 'a') { event.preventDefault(); assistSelected(); }
+  else if (key === 'l') { event.preventDefault(); launchSelected(); }
+  else if ((key === ' ' || key === 'enter') && !focusIsOnControl()) { event.preventDefault(); launchSelected(); }
+  else if (key === ' ' && document.activeElement?.classList.contains('lane') && Number(document.activeElement.dataset.lane) === selectedLane) {
+    // Space on the already selected lane launches, like a second tap.
+    event.preventDefault();
+    if (game.bays[selectedLane].ready) launchSelected();
+  }
 });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseRound(); });
 $('daily-start').addEventListener('click', () => startRound('daily'));
 $('practice-start').addEventListener('click', () => startRound('practice'));
 $('retry-button').addEventListener('click', () => startRound(mode, activeSeed));
 $('home-button').addEventListener('click', returnHome);
 $('share-button').addEventListener('click', shareResult);
+setupSite('circuit-siege');
+showCard('intro');
 applyTheme();
