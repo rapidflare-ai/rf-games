@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#141023">
+    <meta name="description" content="A tiny daily arcade game. Arm the circuit. Stop the haunted machines. Save the humans.">
+    <meta property="og:title" content="Haunted Circuit Siege">
+    <meta property="og:description" content="Can you save the shelter from the haunted machines? A new circuit siege every day.">
+    <meta property="og:type" content="website">
+    <title>Haunted Circuit Siege · Rapid Games</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="/style.css">
+    <script type="module" src="/game.mjs"></script>
+  </head>
+  <body data-theme="halloween">
+    <div class="page-shell">
+      <header class="masthead">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">▣</span><span>RAPID GAMES <small>/ 001</small></span></div>
+        <label class="theme-picker">SKIN
+          <select id="theme-select" aria-label="Choose visual theme">
+            <option value="auto">SEASONAL</option>
+            <option value="halloween">HALLOWEEN</option>
+            <option value="winter">WINTER</option>
+            <option value="neon">NEON</option>
+          </select>
+        </label>
+      </header>
+
+      <main>
+        <section class="hero" aria-labelledby="game-title">
+          <div class="signal-label"><span class="signal-dot"></span><span id="eyebrow">OCTOBER TRANSMISSION · 01</span></div>
+          <h1 id="game-title">HAUNTED<br><span>CIRCUIT SIEGE</span></h1>
+          <p id="subtitle" class="subtitle">The frontier AI woke the machines. Patch woke the neighborhood.</p>
+        </section>
+
+        <section class="cabinet" aria-label="Game cabinet">
+          <div class="cabinet-top">
+            <div class="cabinet-id"><span class="status-light"></span><span id="cabinet-label">DAILY DEFENSE</span><span id="day-label" class="day-label"></span></div>
+            <div class="hud" aria-label="Game status">
+              <span title="Shelter integrity">CORE <strong id="core-value">♥ ♥ ♥</strong></span>
+              <span title="Available energy">ENERGY <strong id="energy-value">5/7</strong></span>
+              <span title="Machines stopped">STOPPED <strong id="kills-value">0/19</strong></span>
+            </div>
+          </div>
+
+          <div id="game-board" class="board" aria-label="Three defense lanes">
+            <div class="board-grid" aria-hidden="true"></div>
+            <div class="core-tower" aria-hidden="true"><span>HUMAN<br>SHELTER</span><i></i></div>
+            <div class="moon" aria-hidden="true"></div>
+            <div class="lane-list">
+              <button class="lane" type="button" data-lane="0" aria-label="Arm upper lane">
+                <span class="lane-name">01 <b>ROOFTOPS</b></span><span class="rail"></span><span class="socket"><span>+</span></span><span class="bot-layer"></span>
+              </button>
+              <button class="lane" type="button" data-lane="1" aria-label="Arm middle lane">
+                <span class="lane-name">02 <b>MAIN ST.</b></span><span class="rail"></span><span class="socket"><span>+</span></span><span class="bot-layer"></span>
+              </button>
+              <button class="lane" type="button" data-lane="2" aria-label="Arm lower lane">
+                <span class="lane-name">03 <b>SUBSTATION</b></span><span class="rail"></span><span class="socket"><span>+</span></span><span class="bot-layer"></span>
+              </button>
+            </div>
+            <div id="screen-overlay" class="screen-overlay">
+              <div class="overlay-card" id="intro-card">
+                <div class="tiny-kicker">INCOMING TRANSMISSION</div>
+                <div class="ai-avatar" aria-hidden="true"><span>◉ ◉</span><b>PATCH</b></div>
+                <h2 id="intro-heading">THE MACHINES ARE<br><em>NOT FEELING FRIENDLY.</em></h2>
+                <p id="story">A haunted factory is sending possessed robots toward the last lit shelter. Arm the circuit before they arrive.</p>
+                <div class="intro-actions">
+                  <button id="daily-start" class="primary-button" type="button">PLAY TODAY'S WAVE <span>↗</span></button>
+                  <button id="practice-start" class="text-button" type="button">PRACTICE RUN <span>→</span></button>
+                </div>
+              </div>
+              <div class="overlay-card result-card hidden" id="result-card" aria-live="polite">
+                <div class="tiny-kicker" id="result-kicker">TRANSMISSION COMPLETE</div>
+                <h2 id="result-heading">SHELTER SECURED</h2>
+                <p id="result-story"></p>
+                <div class="result-stats"><div><small>STOPPED</small><strong id="result-kills">0/19</strong></div><div><small>CORE</small><strong id="result-core">♥ ♥ ♥</strong></div><div><small>SCORE</small><strong id="result-score">0000</strong></div></div>
+                <p id="best-line" class="best-line"></p>
+                <div class="intro-actions">
+                  <button id="share-button" class="primary-button" type="button">SHARE RESULT <span>↗</span></button>
+                  <button id="retry-button" class="text-button" type="button">RETRY WAVE <span>→</span></button>
+                </div>
+                <button id="home-button" class="home-button" type="button">← BACK TO MENU</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="control-panel">
+            <div class="panel-title"><span class="panel-spark">✳</span> PATCH'S WORKBENCH <span id="mode-label" class="mode-label">CHOOSE A DEVICE, THEN TAP A LANE</span></div>
+            <div class="tools">
+              <button type="button" class="tool selected" data-device="coil" aria-pressed="true">
+                <span class="tool-icon coil-icon" aria-hidden="true">ϟ</span>
+                <span class="tool-copy"><strong>COIL</strong><small>1 HIT · 1 ENERGY</small></span>
+                <span class="tool-key">Q</span>
+              </button>
+              <button type="button" class="tool" data-device="capacitor" aria-pressed="false">
+                <span class="tool-icon cap-icon" aria-hidden="true">◈</span>
+                <span class="tool-copy"><strong>CAPACITOR</strong><small>2 HITS + SPLASH · 3 ENERGY</small></span>
+                <span class="tool-key">W</span>
+              </button>
+            </div>
+            <div class="panel-bottom"><span class="energy-meter" aria-hidden="true"><i id="energy-bar"></i></span><span id="patch-message" class="patch-message" role="status">PATCH: Tap a device, then a lane. Tap an armed lane to take it back.</span></div>
+          </div>
+        </section>
+
+        <div class="below-cabinet"><div><span class="micro-label">HOW TO PLAY</span><p>Arm a lane before a machine reaches its socket. Coils hit one machine; capacitors hit harder and splash nearby lanes. Energy recharges on its own. Keep the shelter lit.</p></div><div class="daily-note"><span class="micro-label">ONE WAVE. EVERY DAY.</span><p>The daily wave is the same worldwide until midnight UTC. Practice runs are unlimited. No account needed.</p></div></div>
+      </main>
+
+      <footer>Designed and designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a></footer>
+    </div>
+  </body>
+</html>
