@@ -14,4 +14,4 @@ The first game is a buildless static site in `public/`. `engine.mjs` contains ga
 
 Run `node --test tests/*.test.mjs` for rule checks. For visual checks, serve `public/` from a local static server and test a narrow phone viewport as well as desktop. Vercel serves `public/` according to `vercel.json`.
 
-The daily wave is keyed to the UTC date. Keep theme changes independent from gameplay so a day's challenge remains comparable. Do not put Rapidflare product messaging in the game; retain the linked footer credit from `GOAL.md`.
+The daily wave is keyed to the UTC date. Keep theme changes independent from gameplay so a day's challenge remains comparable. Patch's friendly help and the repair-and-launch interaction are core to the first game. Do not put Rapidflare product messaging in the game; retain the linked footer credit from `GOAL.md`.

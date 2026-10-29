@@ -1,18 +1,30 @@
 export const LANE_COUNT = 3;
-export const MAX_ENERGY = 7;
-export const START_ENERGY = 5;
-export const RECHARGE_SECONDS = 1.65;
-export const SOCKET_X = 0.25;
-
-export const DEVICES = Object.freeze({
-  coil: { name: 'Coil', cost: 1, damage: 1 },
-  capacitor: { name: 'Capacitor', cost: 3, damage: 2 },
+export const PARTS = Object.freeze({
+  gps: { name: 'GPS antenna', icon: '⌁', purpose: 'finding a position' },
+  sensor: { name: 'Optical sensor', icon: '◉', purpose: 'seeing a target' },
+  pcie: { name: 'PCIe upgrade', icon: '▤', purpose: 'connecting an expansion card' },
+  jammer: { name: 'Signal jammer', icon: '⌗', purpose: 'blocking a control signal' },
+  power: { name: 'Power cell', icon: 'ϟ', purpose: 'restoring power' },
 });
 
+export const DIAGNOSTICS = Object.freeze({
+  gps: { label: 'POSITION UNKNOWN', hint: 'It can fly, but cannot tell where it is.' },
+  sensor: { label: 'VISION OFFLINE', hint: 'It cannot see the target ahead.' },
+  pcie: { label: 'EXPANSION BUS MISSING', hint: 'The next upgrade needs a hardware connection first.' },
+  jammer: { label: 'AI SIGNAL STILL LIVE', hint: 'The frontier AI can still steer it remotely.' },
+  power: { label: 'POWER DEPLETED', hint: 'Its battery cannot power a launch.' },
+});
+
+export const CRAFTS = Object.freeze([
+  { kind: 'drone', name: 'Scout drone', icon: '✦', damage: 1, speed: 0.58 },
+  { kind: 'fighter', name: 'Fighter jet', icon: '➤', damage: 2, speed: 0.73 },
+  { kind: 'rover', name: 'Rescue rover', icon: '▣', damage: 1, speed: 0.54 },
+]);
+
 const ENEMIES = Object.freeze({
-  drone: { hp: 1, speed: 0.112, points: 100 },
-  runner: { hp: 1, speed: 0.157, points: 130 },
-  brute: { hp: 2, speed: 0.084, points: 200 },
+  drone: { hp: 1, speed: 0.101 },
+  runner: { hp: 1, speed: 0.138 },
+  brute: { hp: 2, speed: 0.074 },
 });
 
 export function utcDayKey(date = new Date()) {
@@ -42,72 +54,90 @@ function randomFromSeed(seed) {
 export function makeScenario(seed) {
   const random = randomFromSeed(seed);
   const wave = [];
-  let time = 1.5;
+  let at = 1.4;
   let previousLane = -1;
-  let sameLaneCount = 0;
-
-  for (let index = 0; index < 19; index += 1) {
+  let repeat = 0;
+  for (let index = 0; index < 16; index += 1) {
     let lane = Math.floor(random() * LANE_COUNT);
-    if (lane === previousLane && sameLaneCount >= 2) {
-      lane = (lane + 1 + Math.floor(random() * (LANE_COUNT - 1))) % LANE_COUNT;
-    }
-    sameLaneCount = lane === previousLane ? sameLaneCount + 1 : 1;
+    if (lane === previousLane && repeat >= 2) lane = (lane + 1 + Math.floor(random() * 2)) % LANE_COUNT;
+    repeat = lane === previousLane ? repeat + 1 : 1;
     previousLane = lane;
-
-    const kind = index >= 4 && index % 5 === 4
-      ? 'brute'
-      : index >= 3 && index % 4 === 3
-        ? 'runner'
-        : 'drone';
-
-    wave.push({ id: index, at: Number(time.toFixed(2)), lane, kind });
-    time += 1.55 + random() * 0.55;
-    if (index === 8 || index === 14) time += 1.5;
+    const kind = index >= 4 && index % 5 === 4 ? 'brute' : index >= 3 && index % 4 === 3 ? 'runner' : 'drone';
+    wave.push({ id: index, at: Number(at.toFixed(2)), lane, kind });
+    at += 2.4 + random() * 0.7;
+    if (index === 7) at += 1.2;
   }
-
   return wave;
+}
+
+function partQueue(seed, lane, cycle) {
+  if (cycle === 0) return [['gps'], ['pcie', 'jammer'], ['power']][lane];
+  const variant = seedFromText(`${seed}:${lane}:${cycle}`);
+  if (lane === 0) return [["gps"], ["sensor"], ["power"]][variant % 3];
+  if (lane === 1) return variant % 2 ? ['pcie', 'jammer'] : ['pcie', 'power'];
+  return [['power'], ['sensor'], ['jammer']][variant % 3];
+}
+
+function makeBay(seed, lane, cycle) {
+  return { lane, cycle, queue: partQueue(seed, lane, cycle), installed: 0, ready: false };
 }
 
 export function createGame(seed, mode = 'daily') {
   const wave = makeScenario(seed);
   return {
-    mode,
-    seed,
-    wave,
-    spawnIndex: 0,
-    bots: [],
-    traps: Array(LANE_COUNT).fill(null),
-    energy: START_ENERGY,
-    recharge: 0,
-    core: 3,
-    kills: 0,
-    elapsed: 0,
-    status: 'running',
-    events: [],
-    lastSpawnAt: wave.at(-1).at,
+    mode, seed, wave, spawnIndex: 0,
+    bots: [], shots: [], bays: Array.from({ length: LANE_COUNT }, (_, lane) => makeBay(seed, lane, 0)),
+    core: 3, kills: 0, launches: 0, mistakes: 0, assists: 3,
+    elapsed: 0, status: 'running', events: [], nextShotId: 0,
   };
 }
 
-export function armLane(game, lane, device) {
+export function neededPart(game, lane) {
+  const bay = game.bays[lane];
+  return bay?.ready ? null : bay?.queue[bay.installed] ?? null;
+}
+
+export function installPart(game, lane, part) {
   if (game.status !== 'running') return { ok: false, reason: 'Round is over' };
-  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_COUNT) {
-    return { ok: false, reason: 'Choose a lane' };
+  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_COUNT) return { ok: false, reason: 'Choose a bay' };
+  const bay = game.bays[lane];
+  if (bay.ready) return { ok: false, reason: 'Craft ready to launch' };
+  if (!PARTS[part]) return { ok: false, reason: 'Choose a component' };
+  const needed = neededPart(game, lane);
+  if (part !== needed) {
+    game.mistakes += 1;
+    game.events.push({ type: 'wrong', lane, needed, part });
+    return { ok: false, reason: 'That part does not solve this diagnostic' };
   }
-  if (game.traps[lane]) {
-    const refund = DEVICES[game.traps[lane].device].cost;
-    game.energy = Math.min(MAX_ENERGY, game.energy + refund);
-    game.traps[lane] = null;
-    game.events.push({ type: 'remove', lane });
-    return { ok: true, action: 'removed' };
-  }
-  if (!DEVICES[device]) return { ok: false, reason: 'Choose a device' };
-  if (game.energy < DEVICES[device].cost) {
-    return { ok: false, reason: 'Need more energy' };
-  }
-  game.energy -= DEVICES[device].cost;
-  game.traps[lane] = { device };
-  game.events.push({ type: 'arm', lane, device });
-  return { ok: true, action: 'armed' };
+  bay.installed += 1;
+  bay.ready = bay.installed === bay.queue.length;
+  game.events.push({ type: bay.ready ? 'ready' : 'install', lane, part });
+  return { ok: true, ready: bay.ready, next: neededPart(game, lane) };
+}
+
+export function useAssist(game, lane) {
+  if (game.status !== 'running') return { ok: false, reason: 'Round is over' };
+  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_COUNT) return { ok: false, reason: 'Choose a bay' };
+  if (game.assists <= 0) return { ok: false, reason: 'Patch is recharging' };
+  if (game.bays[lane].ready) return { ok: false, reason: 'Craft ready to launch' };
+  const part = neededPart(game, lane);
+  game.assists -= 1;
+  const response = installPart(game, lane, part);
+  game.events.push({ type: 'assist', lane, part });
+  return { ...response, part };
+}
+
+export function launchCraft(game, lane) {
+  if (game.status !== 'running') return { ok: false, reason: 'Round is over' };
+  if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_COUNT) return { ok: false, reason: 'Choose a bay' };
+  const bay = game.bays[lane];
+  if (!bay.ready) return { ok: false, reason: 'Solve the diagnostic before launch' };
+  const craft = CRAFTS[lane];
+  game.shots.push({ id: game.nextShotId++, lane, kind: craft.kind, x: 0.07, speed: craft.speed, damage: craft.damage });
+  game.launches += 1;
+  game.bays[lane] = makeBay(game.seed, lane, bay.cycle + 1);
+  game.events.push({ type: 'launch', lane, kind: craft.kind });
+  return { ok: true };
 }
 
 export function tick(game, seconds) {
@@ -116,44 +146,28 @@ export function tick(game, seconds) {
   game.events = [];
   game.elapsed += dt;
 
-  game.recharge += dt;
-  while (game.recharge >= RECHARGE_SECONDS) {
-    game.recharge -= RECHARGE_SECONDS;
-    game.energy = Math.min(MAX_ENERGY, game.energy + 1);
-  }
-
   while (game.spawnIndex < game.wave.length && game.wave[game.spawnIndex].at <= game.elapsed) {
     const entry = game.wave[game.spawnIndex];
     const stats = ENEMIES[entry.kind];
-    game.bots.push({ ...entry, x: 1.035, hp: stats.hp, maxHp: stats.hp, speed: stats.speed });
+    game.bots.push({ ...entry, x: 1.04, hp: stats.hp, maxHp: stats.hp, speed: stats.speed });
     game.events.push({ type: 'spawn', lane: entry.lane, kind: entry.kind });
     game.spawnIndex += 1;
   }
 
   for (const bot of game.bots) bot.x -= bot.speed * dt;
+  for (const shot of game.shots) shot.x += shot.speed * dt;
 
-  for (let lane = 0; lane < LANE_COUNT; lane += 1) {
-    const trap = game.traps[lane];
-    if (!trap) continue;
+  const spentShots = new Set();
+  for (const shot of game.shots) {
     const target = game.bots
-      .filter((bot) => bot.lane === lane && bot.hp > 0 && bot.x <= SOCKET_X)
+      .filter((bot) => bot.lane === shot.lane && bot.hp > 0 && shot.x >= bot.x)
       .sort((a, b) => a.x - b.x)[0];
     if (!target) continue;
-
-    target.hp -= DEVICES[trap.device].damage;
-    game.events.push({ type: 'fire', lane, device: trap.device });
-
-    if (trap.device === 'capacitor') {
-      for (const bot of game.bots) {
-        if (bot === target || bot.hp <= 0) continue;
-        if (Math.abs(bot.lane - lane) === 1 && Math.abs(bot.x - target.x) <= 0.17) {
-          bot.hp -= 1;
-          game.events.push({ type: 'splash', lane: bot.lane });
-        }
-      }
-    }
-    game.traps[lane] = null;
+    target.hp -= shot.damage;
+    spentShots.add(shot.id);
+    game.events.push({ type: 'hit', lane: shot.lane, kind: shot.kind });
   }
+  game.shots = game.shots.filter((shot) => !spentShots.has(shot.id) && shot.x < 1.08);
 
   for (const bot of game.bots) {
     if (bot.hp <= 0) {
@@ -174,11 +188,10 @@ export function tick(game, seconds) {
 }
 
 export function score(game) {
-  return game.kills * 100 + game.core * 250 + game.energy * 10;
+  return Math.max(0, game.kills * 100 + game.core * 250 + game.launches * 5 - game.mistakes * 15);
 }
 
 export function urgentLane(game) {
   const closest = [...game.bots].sort((a, b) => a.x - b.x)[0];
-  if (closest) return closest.lane;
-  return game.wave[game.spawnIndex]?.lane ?? 1;
+  return closest?.lane ?? game.wave[game.spawnIndex]?.lane ?? 1;
 }

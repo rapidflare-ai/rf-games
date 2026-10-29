@@ -1,6 +1,6 @@
 # Rapid Games
 
-Small, replayable browser games from Rapidflare. The first game is **Haunted Circuit Siege**: defend a neighborhood from a rogue frontier AI and its possessed machines with a friendly AI and a few electronic components.
+Small, replayable browser games from Rapidflare. The first game is **Haunted Circuit Siege**: Patch, a friendly AI, helps people repair and launch craft against a rogue frontier AI's ghoulish machines.
 
 ## Play locally
 
@@ -22,4 +22,4 @@ Import this repository as a new Vercel project. The checked-in `vercel.json` sel
 - [GAMES.md](GAMES.md) records the candidate games and why Haunted Circuit Siege came first.
 - [PLAN.md](PLAN.md) tracks implementation and handoff status.
 
-Seasonal copy and colors live in `public/themes.mjs`. Game rules and the seeded daily wave live in `public/engine.mjs`.
+Seasonal copy and colors live in `public/themes.mjs`; change `ACTIVE_THEME` there when a new skin launches. Other themes appear as disabled upcoming choices. The Updates page is a signup preview only and collects no addresses. Game rules, fault diagnostics, and the seeded daily wave live in `public/engine.mjs`.
