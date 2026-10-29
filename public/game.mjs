@@ -54,6 +54,13 @@ function fillGhoulFace(node, kind) {
 
 function renderGhoulList() {
   const theme = THEMES[themeName];
+  $('splash-ghouls').replaceChildren(...['drone', 'runner', 'brute', 'stagger'].map((kind) => {
+    const chip = document.createElement('span');
+    chip.className = `ghoul-chip ${kind}`;
+    chip.innerHTML = '<span class="enemy-face"></span><span class="ghoul-accessory"></span>';
+    paintGhoul(chip, themeName, kind);
+    return chip;
+  }));
   $('ghoul-list').replaceChildren(...['drone', 'runner', 'brute', 'stagger'].map((kind) => {
     const item = document.createElement('li');
     item.innerHTML = `<span class="ghoul-chip ${kind}" aria-hidden="true"><span class="enemy-face"></span><span class="ghoul-accessory"></span></span><span><strong></strong><small></small></span>`;
@@ -69,9 +76,10 @@ function applyTheme() {
   document.body.dataset.theme = themeName;
   document.querySelector('meta[name="theme-color"]').content = theme.sky;
   $('eyebrow').textContent = theme.eyebrow;
-  $('game-title').innerHTML = theme.title === 'CIRCUIT SIEGE'
-    ? 'CIRCUIT<br><span>SIEGE</span>'
-    : `${theme.title.split(' ')[0]}<br><span>CIRCUIT SIEGE</span>`;
+  const [lead, rest] = theme.title === 'CIRCUIT SIEGE' ? ['CIRCUIT', 'SIEGE'] : [theme.title.split(' ')[0], 'CIRCUIT SIEGE'];
+  $('game-title').innerHTML = `${lead} <span>${rest}</span>`;
+  $('splash-title').innerHTML = `${lead}<br><span>${rest}</span>`;
+  $('splash-eyebrow').textContent = theme.eyebrow;
   $('subtitle').textContent = theme.subtitle;
   $('story').textContent = theme.story;
   $('intro-heading').innerHTML = `${theme.intro[0]}<br><em>${theme.intro[1]}</em>`;
@@ -446,6 +454,9 @@ $('practice-start').addEventListener('click', () => startRound('practice'));
 $('retry-button').addEventListener('click', () => startRound(mode, activeSeed));
 $('home-button').addEventListener('click', returnHome);
 $('share-button').addEventListener('click', shareResult);
-setupSite('circuit-siege');
+setupSite('circuit-siege', {
+  onAction: (action) => startRound(action === 'daily' ? 'daily' : 'practice'),
+  onHelpOpen: pauseRound,
+});
 showCard('intro');
 applyTheme();

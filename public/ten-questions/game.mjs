@@ -60,6 +60,13 @@ function buildTrack() {
 }
 
 function renderGhoulList() {
+  $('splash-ghouls').replaceChildren(...PURSUERS.map((kind) => {
+    const chip = document.createElement('span');
+    chip.className = `ghoul-chip ${kind}`;
+    chip.innerHTML = '<span class="enemy-face"></span><span class="ghoul-accessory"></span>';
+    paintGhoul(chip, ACTIVE_THEME, kind);
+    return chip;
+  }));
   $('ghoul-list').replaceChildren(...PURSUERS.map((kind) => {
     const item = document.createElement('li');
     item.innerHTML = `<span class="ghoul-chip ${kind}" aria-hidden="true"><span class="enemy-face"></span><span class="ghoul-accessory"></span></span><span><strong></strong><small></small></span>`;
@@ -360,7 +367,7 @@ $('practice-start').addEventListener('click', () => startRound('practice'));
 $('retry-button').addEventListener('click', () => startRound('practice'));
 $('home-button').addEventListener('click', returnHome);
 $('share-button').addEventListener('click', shareResult);
-setupSite('ten-questions');
+setupSite('ten-questions', { onAction: (action) => startRound(action === 'daily' ? 'daily' : 'practice') });
 buildTrack();
 renderGhoulList();
 showCard('intro');

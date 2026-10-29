@@ -4,10 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#141023">
-    <meta name="description" content="A tiny daily deduction game. A ghoul creeps closer with every question. Work out which part Flare needs before it reaches the shelter.">
+    <meta name="description" content="A just-for-fun daily deduction game. A ghoul creeps closer with every question. Work out which part Flare needs before it reaches the shelter.">
+    <meta name="robots" content="noindex">
+    <meta property="og:site_name" content="Rapid Games">
     <meta property="og:title" content="Ten Questions Till Dawn">
-    <meta property="og:description" content="Ten moves. One part. A ghoul at the gate. Help Flare before it reaches the shelter.">
+    <meta property="og:description" content="A just-for-fun Halloween deduction game from the Rapidflare team. Ten moves, one part, a ghoul at the gate.">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://games.rapidflare.ai/ten-questions/">
+    <meta property="og:image" content="https://games.rapidflare.ai/og/ten-questions.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Ten Questions Till Dawn: a ghoul creeps toward a shelter under the moon.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Ten Questions Till Dawn">
+    <meta name="twitter:description" content="A just-for-fun Halloween deduction game from the Rapidflare team.">
+    <meta name="twitter:image" content="https://games.rapidflare.ai/og/ten-questions.png">
     <title>Ten Questions Till Dawn · Rapid Games</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/style.css">
@@ -24,15 +35,15 @@
             <button id="game-menu-button" class="menu-button" type="button" aria-expanded="false" aria-controls="game-menu"><span class="menu-kicker">GAME</span> <span class="menu-current">TEN QUESTIONS TILL DAWN</span> <span aria-hidden="true">▾</span></button>
             <ul id="game-menu" class="game-menu" hidden></ul>
           </nav>
+          <button id="help-button" class="menu-button help-button" type="button" aria-haspopup="dialog" aria-keyshortcuts="?"><span class="help-label">HELP</span> <kbd aria-hidden="true">?</kbd></button>
           <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true" aria-keyshortcuts="M"><span class="sound-icon" aria-hidden="true">🔊</span><span class="sound-label">SOUND ON</span></button>
         </div>
       </header>
 
       <main>
-        <section class="hero" aria-labelledby="game-title">
+        <section class="hero compact" aria-labelledby="game-title">
           <div class="signal-label"><span class="signal-dot"></span><span>OCTOBER TRANSMISSION · 02</span></div>
-          <h1 id="game-title">TEN QUESTIONS<br><span>TILL DAWN</span></h1>
-          <p class="subtitle">A ghoul is creeping toward the shelter. Flare knows which part will stop it. You get ten moves to work out which.</p>
+          <h1 id="game-title">TEN QUESTIONS <span>TILL DAWN</span></h1>
         </section>
 
         <section id="game-cabinet" class="cabinet" aria-label="Game cabinet" tabindex="-1">
@@ -53,15 +64,15 @@
             <div class="dawn-track" aria-hidden="true">
               <div id="track-ticks" class="track-ticks"></div>
               <span id="pursuer" class="pursuer"><span id="pursuer-body" class="ghoul-body drone"><span class="enemy-face">👻</span><span class="ghoul-accessory"></span><span class="ai-stamp">AI</span></span><span id="pursuer-name" class="bot-label">SHUT SESAME</span></span>
-              <span id="hero" class="hero-ai"><span>◉ ◉</span><b>FLARE</b></span>
+              <span id="hero" class="hero-ai"><span class="flare-icon" data-flare-tool="question"></span><b>FLARE</b></span>
             </div>
           </div>
           <div id="screen-overlay" class="screen-overlay tq-overlay">
             <div class="overlay-card" id="intro-card">
               <div class="tiny-kicker">INCOMING TRANSMISSION</div>
-              <div class="ai-avatar" aria-hidden="true"><span>◉ ◉</span><b>FLARE</b></div>
+              <div class="ai-avatar flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="question"></span><b>FLARE</b></div>
               <h2>I KNOW THE PART.<br><em>CAN YOU NAME IT?</em></h2>
-              <p>Flare has picked the one component that will stop tonight's ghoul. Ask yes-or-no questions, cross out parts that don't fit, then name it. Each question lets the ghoul creep one step closer. A wrong guess costs three.</p>
+              <p class="intro-hint">New here? Press <kbd>?</kbd> for how to play.</p>
               <div class="intro-actions">
                 <button id="daily-start" class="primary-button" type="button" aria-keyshortcuts="D">PLAY TODAY'S CASE <kbd aria-hidden="true">D</kbd></button>
                 <button id="practice-start" class="text-button" type="button" aria-keyshortcuts="R">PRACTICE CASE <kbd aria-hidden="true">R</kbd></button>
@@ -83,7 +94,7 @@
           </div>
 
           <div class="control-panel">
-            <div class="panel-title"><span class="patch-face" aria-hidden="true">◉ ◉<small>FLARE</small></span><span><span id="case-label">TONIGHT'S CASE</span><small id="case-brief" class="selected-bay case-brief">Start a case to hear Flare's brief.</small></span></div>
+            <div class="panel-title"><span class="patch-face flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="question"></span><small>FLARE</small></span><span><span id="case-label">TONIGHT'S CASE</span><small id="case-brief" class="selected-bay case-brief">Start a case to hear Flare's brief.</small></span></div>
 
             <div class="parts-title"><h2 class="panel-heading">ASK FLARE</h2><span>EACH QUESTION = 1 STEP</span></div>
             <div id="question-list" class="question-list" role="group" aria-label="Questions"></div>
@@ -95,29 +106,51 @@
           </div>
         </section>
 
-        <div class="below-cabinet"><div><span class="micro-label">HOW TO PLAY</span><p>Flare has secretly picked one part. Each yes-or-no question moves the ghoul a step closer; a wrong guess moves it three. Read each part's spec line, cross out the ones that don't fit, and name the right one before the ghoul reaches the shelter.</p></div><div class="daily-note"><span class="micro-label">ONE CASE. EVERY DAY.</span><p>A hundred cases rotate through the year, the same worldwide until midnight UTC. Practice cases are unlimited. No account needed.</p></div></div>
-
-        <section class="info-grid" aria-label="Keyboard shortcuts and ghouls">
-          <div class="info-card">
-            <h2 class="micro-label">KEYBOARD</h2>
-            <dl class="key-list">
-              <div><dt><kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd></dt><dd>Ask question 1 to 10</dd></div>
-              <div><dt><kbd>A</kbd>–<kbd>J</kbd></dt><dd>Select suspect part A to J</dd></div>
-              <div><dt><kbd>X</kbd></dt><dd>Cross out or bring back the selected part</dd></div>
-              <div><dt><kbd>N</kbd></dt><dd>Name the selected part as your answer</dd></div>
-              <div><dt><kbd>Esc</kbd></dt><dd>Clear your selection</dd></div>
-              <div><dt><kbd>D</kbd> <kbd>R</kbd> <kbd>S</kbd></dt><dd>Daily case, practice, share (on the menu cards)</dd></div>
-              <div><dt><kbd>M</kbd></dt><dd>Sound on or off</dd></div>
-            </dl>
-          </div>
-          <div class="info-card">
-            <h2 class="micro-label">WHO'S AT THE GATE</h2>
-            <ul id="ghoul-list" class="ghoul-list"></ul>
-          </div>
-        </section>
       </main>
 
-      <footer>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.</footer>
+      <footer>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.<small class="disclaimer">A just-for-fun side project. The ghouls are parodies and are not affiliated with any AI company.</small></footer>
     </div>
+
+    <dialog id="splash" class="splash" aria-labelledby="splash-title">
+      <div class="splash-inner">
+        <div class="signal-label"><span class="signal-dot"></span><span>OCTOBER TRANSMISSION · 02</span></div>
+        <h2 id="splash-title" class="splash-title">TEN QUESTIONS<br><span>TILL DAWN</span></h2>
+        <p class="subtitle">A ghoul is creeping toward the shelter. Flare knows which part will stop it.</p>
+        <div class="splash-cast" aria-hidden="true"><span class="splash-flare"><span class="flare-icon" data-flare-tool="question"></span><b>FLARE</b></span><span class="versus">VS</span><div id="splash-ghouls" class="splash-ghouls"></div></div>
+        <p class="splash-story">Ask Flare yes-or-no questions, cross out the parts that don't fit, and name the right one. Each question lets the ghoul creep one step closer; a wrong guess costs three. You have ten moves till dawn.</p>
+        <div class="intro-actions">
+          <button class="primary-button" type="button" data-action="daily" data-shortcut="d" aria-keyshortcuts="D" autofocus>PLAY TODAY'S CASE <kbd aria-hidden="true">D</kbd></button>
+          <button class="text-button" type="button" data-action="practice" data-shortcut="r" aria-keyshortcuts="R">PRACTICE CASE <kbd aria-hidden="true">R</kbd></button>
+        </div>
+        <div class="splash-links">
+          <button class="home-button" type="button" data-action="help" data-shortcut="?" aria-keyshortcuts="?">HOW TO PLAY &amp; SHORTCUTS <kbd aria-hidden="true">?</kbd></button>
+          <button class="home-button" type="button" data-action="close" aria-keyshortcuts="Escape">JUST LOOK AROUND <kbd aria-hidden="true">Esc</kbd></button>
+        </div>
+        <p class="splash-note">A just-for-fun side project. The ghouls are parodies and are not affiliated with any AI company.</p>
+      </div>
+    </dialog>
+
+    <dialog id="help-panel" class="help-panel" aria-labelledby="help-title">
+      <div class="help-head"><h2 id="help-title">HOW TO PLAY</h2><button type="button" class="help-close" data-action="close" aria-label="Close help"><span aria-hidden="true">✕</span> <kbd aria-hidden="true">Esc</kbd></button></div>
+      <p>Flare has secretly picked one part. Each yes-or-no question moves the ghoul a step closer; a wrong guess moves it three. Read each part's spec line, cross out the ones that don't fit, and name the right one before the ghoul reaches the shelter.</p>
+      <p class="help-note"><strong>One case, every day.</strong> A hundred cases rotate through the year, the same worldwide until midnight UTC. Practice cases are unlimited. No account needed.</p>
+      <h3 class="micro-label">KEYBOARD</h3>
+      <dl class="key-list">
+        <div><dt><kbd>1</kbd>–<kbd>9</kbd>, <kbd>0</kbd></dt><dd>Ask question 1 to 10</dd></div>
+        <div><dt><kbd>A</kbd>–<kbd>J</kbd></dt><dd>Select suspect part A to J</dd></div>
+        <div><dt><kbd>X</kbd></dt><dd>Cross out or bring back the selected part</dd></div>
+        <div><dt><kbd>N</kbd></dt><dd>Name the selected part as your answer</dd></div>
+        <div><dt><kbd>Esc</kbd></dt><dd>Clear your selection; close this panel</dd></div>
+        <div><dt><kbd>D</kbd> <kbd>R</kbd> <kbd>S</kbd></dt><dd>Daily case, practice, share (on the menu cards)</dd></div>
+        <div><dt><kbd>?</kbd></dt><dd>Open this help</dd></div>
+        <div><dt><kbd>M</kbd></dt><dd>Sound on or off</dd></div>
+      </dl>
+      <h3 class="micro-label">WHO'S AT THE GATE</h3>
+      <ul id="ghoul-list" class="ghoul-list"></ul>
+      <div class="help-actions">
+        <button class="text-button" type="button" data-action="splash">SHOW THE WELCOME SCREEN <span>→</span></button>
+        <a class="back-link" href="/updates.html">GET GAME UPDATES <span aria-hidden="true">↗</span></a>
+      </div>
+    </dialog>
   </body>
 </html>

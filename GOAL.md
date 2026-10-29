@@ -12,7 +12,9 @@ Create a small, public, phone-friendly web game line with a distinctive electron
 - Keep the villain and characters original. Satire can target the idea of overconfident frontier AI. Ghoul names may be playful nods to well-known AI products (Clod, Chat al Ghoul, Doppelghoul, Grog), but never use a real company's or product's actual name, logo, mascot, or a film character.
 - The friendly AI is called Flare.
 - Everything is playable by keyboard and accessible to screen readers, with sound that can be switched off.
-- Rapidflare appears only in the linked footer credit: “Designed for fun by Rapidflare. No AI was harmed in the making of this game.” Marketing and hosting can make the connection outside the game.
+- Rapidflare appears only in the linked footer credit: “Designed for fun by Rapidflare. No AI was harmed in the making of this game.” Marketing and hosting can make the connection outside the game; share cards may say the game is “from the Rapidflare team”.
+- The games must never affect the core Rapidflare brand in search: pages are noindex, hosted apart from the marketing site, and carry a disclaimer that the ghouls are parodies not affiliated with any AI company.
+- Pages open straight onto the game. A welcome splash greets first-time visitors once; how to play, shortcuts and the ghoul roster live in a help panel opened with HELP or `?`.
 
 ## First release: Haunted Circuit Siege
 

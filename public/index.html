@@ -4,10 +4,21 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#141023">
-    <meta name="description" content="A tiny daily arcade game. Help Flare repair friendly craft and launch them against a frontier AI's ghouls.">
+    <meta name="description" content="A just-for-fun daily arcade game. Help Flare repair friendly craft and launch them against a frontier AI's ghouls.">
+    <meta name="robots" content="noindex">
+    <meta property="og:site_name" content="Rapid Games">
     <meta property="og:title" content="Haunted Circuit Siege">
-    <meta property="og:description" content="Flare needs your help. Repair friendly craft, launch them, and stop the frontier AI's ghouls.">
+    <meta property="og:description" content="A just-for-fun Halloween arcade game from the Rapidflare team. Repair friendly craft with Flare and stop the ghouls.">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://games.rapidflare.ai/">
+    <meta property="og:image" content="https://games.rapidflare.ai/og/circuit-siege.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Haunted Circuit Siege: four cartoon ghouls march on a human shelter.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Haunted Circuit Siege">
+    <meta name="twitter:description" content="A just-for-fun Halloween arcade game from the Rapidflare team.">
+    <meta name="twitter:image" content="https://games.rapidflare.ai/og/circuit-siege.png">
     <title>Haunted Circuit Siege · Rapid Games</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/style.css">
@@ -26,15 +37,15 @@
           <label class="theme-picker"><span>THEMES</span>
             <select id="theme-select" aria-label="Current and upcoming themes"></select>
           </label>
+          <button id="help-button" class="menu-button help-button" type="button" aria-haspopup="dialog" aria-keyshortcuts="?"><span class="help-label">HELP</span> <kbd aria-hidden="true">?</kbd></button>
           <button id="sound-toggle" class="sound-toggle" type="button" aria-pressed="true" aria-keyshortcuts="M"><span class="sound-icon" aria-hidden="true">🔊</span><span class="sound-label">SOUND ON</span></button>
         </div>
       </header>
 
       <main>
-        <section class="hero" aria-labelledby="game-title">
+        <section class="hero compact" aria-labelledby="game-title">
           <div class="signal-label"><span class="signal-dot"></span><span id="eyebrow">OCTOBER TRANSMISSION · 01</span></div>
-          <h1 id="game-title">HAUNTED<br><span>CIRCUIT SIEGE</span></h1>
-          <p id="subtitle" class="subtitle">Frontier AI raised an army of ghouls. Flare is on our side.</p>
+          <h1 id="game-title">HAUNTED <span>CIRCUIT SIEGE</span></h1>
         </section>
 
         <section id="game-cabinet" class="cabinet" aria-label="Game cabinet" tabindex="-1">
@@ -66,9 +77,9 @@
             <div id="screen-overlay" class="screen-overlay">
               <div class="overlay-card" id="intro-card">
                 <div class="tiny-kicker">INCOMING TRANSMISSION</div>
-                <div class="ai-avatar" aria-hidden="true"><span>◉ ◉</span><b>FLARE</b></div>
+                <div class="ai-avatar flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="wrench"></span><b>FLARE</b></div>
                 <h2 id="intro-heading">FLARE HAS A PLAN.<br><em>YOU HAVE THE PARTS.</em></h2>
-                <p id="story">Flare, a friendly AI, scans each craft for faults. Read the diagnostic, choose the component that solves it, and launch from the shelter to stop the ghouls.</p>
+                <p class="intro-hint">New here? Press <kbd>?</kbd> for how to play.</p>
                 <div class="intro-actions">
                   <button id="daily-start" class="primary-button" type="button" aria-keyshortcuts="D">PLAY TODAY'S WAVE <kbd aria-hidden="true">D</kbd></button>
                   <button id="practice-start" class="text-button" type="button" aria-keyshortcuts="R">PRACTICE RUN <kbd aria-hidden="true">R</kbd></button>
@@ -99,7 +110,7 @@
           </div>
 
           <div class="control-panel">
-            <div class="panel-title"><span class="patch-face" aria-hidden="true">◉ ◉<small>FLARE</small></span><span>FLARE'S REPAIR BAY<small id="selected-bay" class="selected-bay">SCOUT DRONE · POSITION UNKNOWN</small></span><button id="assist-button" class="assist-button" type="button" aria-keyshortcuts="A">FLARE ASSIST ×3 <kbd aria-hidden="true">A</kbd></button></div>
+            <div class="panel-title"><span class="patch-face flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="wrench"></span><small>FLARE</small></span><span>FLARE'S REPAIR BAY<small id="selected-bay" class="selected-bay">SCOUT DRONE · POSITION UNKNOWN</small></span><button id="assist-button" class="assist-button" type="button" aria-keyshortcuts="A">FLARE ASSIST ×3 <kbd aria-hidden="true">A</kbd></button></div>
             <div class="parts-title"><span>COMPONENT TRAY</span><span>SOLVE THE DIAGNOSTIC</span></div>
             <div class="parts-tray">
               <button type="button" class="part" data-part="gps" aria-keyshortcuts="G"><span class="part-icon">⌁</span><span>GPS<br>ANTENNA</span><kbd aria-hidden="true">G</kbd></button>
@@ -112,30 +123,51 @@
           </div>
         </section>
 
-        <div class="below-cabinet"><div><span class="micro-label">HOW TO PLAY</span><p>Pick a craft bay and read its fault. Choose the component that fixes it, then launch your craft from the shelter. The fighter needs two repairs. Wrong fits cost points; Flare can fit three parts for you. Pause any time.</p></div><div class="daily-note"><span class="micro-label">ONE WAVE. EVERY DAY.</span><p>The daily wave is the same worldwide until midnight UTC. Practice runs are unlimited. No account needed.</p></div></div>
-
-        <section class="info-grid" aria-label="Keyboard shortcuts and ghouls">
-          <div class="info-card">
-            <h2 class="micro-label">KEYBOARD</h2>
-            <dl class="key-list">
-              <div><dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> or <kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Choose a lane</dd></div>
-              <div><dt><kbd>G</kbd> <kbd>O</kbd> <kbd>P</kbd> <kbd>J</kbd> <kbd>B</kbd></dt><dd>Fit GPS, optical sensor, PCIe, jammer, power cell</dd></div>
-              <div><dt><kbd>Space</kbd> or <kbd>L</kbd></dt><dd>Launch the selected craft</dd></div>
-              <div><dt><kbd>A</kbd></dt><dd>Flare assist</dd></div>
-              <div><dt><kbd>Esc</kbd></dt><dd>Pause or resume</dd></div>
-              <div><dt><kbd>D</kbd> <kbd>R</kbd> <kbd>S</kbd></dt><dd>Daily wave, practice or retry, share (on the menu cards)</dd></div>
-              <div><dt><kbd>M</kbd></dt><dd>Sound on or off</dd></div>
-            </dl>
-          </div>
-          <div class="info-card">
-            <h2 class="micro-label">MEET THE GHOULS</h2>
-            <ul id="ghoul-list" class="ghoul-list"></ul>
-          </div>
-        </section>
-        <aside class="updates-callout"><div><span class="micro-label">NEXT TRANSMISSION</span><p>Want to hear when the next seasonal game is ready?</p></div><a href="/updates.html">GET GAME UPDATES <span aria-hidden="true">↗</span></a></aside>
       </main>
 
-      <footer>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.</footer>
+      <footer>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.<small class="disclaimer">A just-for-fun side project. The ghouls are parodies and are not affiliated with any AI company.</small></footer>
     </div>
+
+    <dialog id="splash" class="splash" aria-labelledby="splash-title">
+      <div class="splash-inner">
+        <div class="signal-label"><span class="signal-dot"></span><span id="splash-eyebrow">OCTOBER TRANSMISSION · 01</span></div>
+        <h2 id="splash-title" class="splash-title">HAUNTED<br><span>CIRCUIT SIEGE</span></h2>
+        <p id="subtitle" class="subtitle">Frontier AI raised an army of ghouls. Flare is on our side.</p>
+        <div class="splash-cast" aria-hidden="true"><span class="splash-flare"><span class="flare-icon" data-flare-tool="wrench"></span><b>FLARE</b></span><span class="versus">VS</span><div id="splash-ghouls" class="splash-ghouls"></div></div>
+        <p id="story" class="splash-story">Flare, a friendly AI, scans each craft for faults. Read the diagnostic, choose the component that solves it, and launch from the shelter to stop the ghouls.</p>
+        <div class="intro-actions">
+          <button class="primary-button" type="button" data-action="daily" data-shortcut="d" aria-keyshortcuts="D" autofocus>PLAY TODAY'S WAVE <kbd aria-hidden="true">D</kbd></button>
+          <button class="text-button" type="button" data-action="practice" data-shortcut="r" aria-keyshortcuts="R">PRACTICE RUN <kbd aria-hidden="true">R</kbd></button>
+        </div>
+        <div class="splash-links">
+          <button class="home-button" type="button" data-action="help" data-shortcut="?" aria-keyshortcuts="?">HOW TO PLAY &amp; SHORTCUTS <kbd aria-hidden="true">?</kbd></button>
+          <button class="home-button" type="button" data-action="close" aria-keyshortcuts="Escape">JUST LOOK AROUND <kbd aria-hidden="true">Esc</kbd></button>
+        </div>
+        <p class="splash-note">A just-for-fun side project. The ghouls are parodies and are not affiliated with any AI company.</p>
+      </div>
+    </dialog>
+
+    <dialog id="help-panel" class="help-panel" aria-labelledby="help-title">
+      <div class="help-head"><h2 id="help-title">HOW TO PLAY</h2><button type="button" class="help-close" data-action="close" aria-label="Close help"><span aria-hidden="true">✕</span> <kbd aria-hidden="true">Esc</kbd></button></div>
+      <p>Pick a craft bay and read its fault. Choose the component that fixes it, then launch your craft from the shelter. The fighter needs two repairs. Wrong fits cost points; Flare can fit three parts for you. Opening this panel pauses the game.</p>
+      <p class="help-note"><strong>One wave, every day.</strong> The daily wave is the same worldwide until midnight UTC. Practice runs are unlimited. No account needed.</p>
+      <h3 class="micro-label">KEYBOARD</h3>
+      <dl class="key-list">
+        <div><dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> or <kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Choose a lane</dd></div>
+        <div><dt><kbd>G</kbd> <kbd>O</kbd> <kbd>P</kbd> <kbd>J</kbd> <kbd>B</kbd></dt><dd>Fit GPS, optical sensor, PCIe, jammer, power cell</dd></div>
+        <div><dt><kbd>Space</kbd> or <kbd>L</kbd></dt><dd>Launch the selected craft</dd></div>
+        <div><dt><kbd>A</kbd></dt><dd>Flare assist</dd></div>
+        <div><dt><kbd>Esc</kbd></dt><dd>Pause or resume; close this panel</dd></div>
+        <div><dt><kbd>D</kbd> <kbd>R</kbd> <kbd>S</kbd></dt><dd>Daily wave, practice or retry, share (on the menu cards)</dd></div>
+        <div><dt><kbd>?</kbd></dt><dd>Open this help</dd></div>
+        <div><dt><kbd>M</kbd></dt><dd>Sound on or off</dd></div>
+      </dl>
+      <h3 class="micro-label">MEET THE GHOULS</h3>
+      <ul id="ghoul-list" class="ghoul-list"></ul>
+      <div class="help-actions">
+        <button class="text-button" type="button" data-action="splash">SHOW THE WELCOME SCREEN <span>→</span></button>
+        <a class="back-link" href="/updates.html">GET GAME UPDATES <span aria-hidden="true">↗</span></a>
+      </div>
+    </dialog>
   </body>
 </html>

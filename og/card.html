@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Share card</title>
+    <!-- Source for public/og/*.png. Render with scripts/og-images.sh; not deployed. -->
+    <style>
+      html,body{margin:0;width:1200px;height:630px;overflow:hidden}
+      body{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#f5f0e9;background:radial-gradient(ellipse 60% 50% at 50% 0%,#ffad5b33,transparent 70%),linear-gradient(180deg,#141023,#0b0a13 85%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}
+      .eyebrow{color:#ffad5b;font-size:20px;font-weight:900;letter-spacing:.3em}
+      h1{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;font-size:120px;line-height:.92;letter-spacing:.035em;margin:22px 0 18px;text-shadow:0 6px 0 #201329,0 0 50px #ffad5b40}
+      h1 span{color:#ffad5b}
+      .tagline{font-size:26px;color:#d6ccda}
+      .ghouls{display:flex;gap:26px;margin-top:34px}
+      .ghouls span{display:grid;place-items:center;width:96px;height:90px;border:2px solid #4d4057;border-radius:12px;background:#211a2c;font-size:70px}
+      .ghouls svg{display:block}
+      .ghouls{align-items:center}
+      .ghouls .flare{border-color:#6f9cff;background:#1b2440;font-size:80px;filter:drop-shadow(0 0 14px #6f9cff70)}
+      .ghouls em{font-style:normal;font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;font-size:40px;color:#ffad5b;letter-spacing:.06em}
+      .credit{position:absolute;bottom:26px;left:0;right:0;font-size:17px;color:#9a93a6;letter-spacing:.12em}
+      .credit b{color:#f8f3eb}
+      .moon{position:absolute;right:90px;top:60px;width:110px;height:110px;border-radius:50%;background:#f6dea5;opacity:.7;box-shadow:0 0 60px #f6dea550}
+    </style>
+  </head>
+  <body>
+    <div class="moon"></div>
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="title"></h1>
+    <div class="tagline" id="tagline"></div>
+    <div class="ghouls" id="ghouls"></div>
+    <div class="credit"><b>RAPID GAMES</b> · A JUST-FOR-FUN GAME FROM THE RAPIDFLARE TEAM</div>
+    <script type="module">
+      import { HALLOWEEN_FACES } from '/public/ghoul-faces.mjs';
+      import { flareSvg } from '/public/flare.mjs';
+      const cards = {
+        'circuit-siege': { tool: 'wrench', eyebrow: 'OCTOBER TRANSMISSION · 01', title: 'HAUNTED<br><span>CIRCUIT SIEGE</span>', tagline: 'Repair friendly craft with Flare. Stop the ghouls.' },
+        'ten-questions': { tool: 'question', eyebrow: 'OCTOBER TRANSMISSION · 02', title: 'TEN QUESTIONS<br><span>TILL DAWN</span>', tagline: 'Ten moves. One part. A ghoul at the gate.' },
+      };
+      const card = cards[new URLSearchParams(location.search).get('game')] ?? cards['circuit-siege'];
+      document.getElementById('eyebrow').textContent = card.eyebrow;
+      document.getElementById('title').innerHTML = card.title;
+      document.getElementById('tagline').textContent = card.tagline;
+      document.getElementById('ghouls').innerHTML = `<span class="flare">${flareSvg(card.tool)}</span><em>VS</em>`
+        + Object.values(HALLOWEEN_FACES).map((face) => `<span>${face}</span>`).join('');
+    </script>
+  </body>
+</html>

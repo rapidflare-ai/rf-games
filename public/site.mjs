@@ -1,15 +1,19 @@
 import { isMuted, onMuteChange, setMuted, sfx } from './audio.mjs';
+import { paintFlares } from './flare.mjs';
 
 export const GAMES = Object.freeze([
   { id: 'circuit-siege', name: 'Haunted Circuit Siege', href: '/' },
   { id: 'ten-questions', name: 'Ten Questions Till Dawn', href: '/ten-questions/' },
 ]);
 
-// True when a key press belongs to a control (menu, select, text field) rather than to the game.
-export function keyBelongsToControl(event) {
-  const target = event.target;
+function keyIsForAField(event) {
   return Boolean(event.altKey || event.metaKey || event.ctrlKey
-    || target?.closest?.('select, input, textarea, .game-picker'));
+    || event.target?.closest?.('select, input, textarea, .game-picker'));
+}
+
+// True when a key press belongs to a control (menu, select, text field, open dialog) rather than to the game.
+export function keyBelongsToControl(event) {
+  return keyIsForAField(event) || Boolean(document.querySelector('dialog[open]'));
 }
 
 export function focusIsOnControl() {
@@ -80,13 +84,70 @@ function setupSoundToggle() {
     if (!isMuted()) sfx.select();
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key.toLowerCase() !== 'm' || keyBelongsToControl(event)) return;
+    if (event.key.toLowerCase() !== 'm' || keyIsForAField(event)) return;
     setMuted(!isMuted());
     if (!isMuted()) sfx.select();
   });
 }
 
-export function setupSite(currentId) {
+// Fade a dialog out, then close it. Without motion (or support) it closes at once.
+function closeDialog(dialog, then) {
+  if (!dialog.open || dialog.classList.contains('leaving')) return;
+  const finish = () => { dialog.classList.remove('leaving'); dialog.close(); then?.(); };
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+  dialog.classList.add('leaving');
+  setTimeout(finish, 220);
+}
+
+// The welcome splash shows once per game on first visit; the help panel opens on demand.
+// Buttons inside either dialog can carry data-action (handed to onAction) and data-shortcut (a key).
+function setupDialogs(currentId, { onAction, onHelpOpen } = {}) {
+  const splash = document.getElementById('splash');
+  const help = document.getElementById('help-panel');
+  const seenKey = `rf-games-splash-seen:${currentId}`;
+  const openHelp = () => {
+    if (!help || help.open) return;
+    if (splash?.open) splash.close();
+    onHelpOpen?.();
+    help.showModal();
+  };
+  for (const dialog of [splash, help].filter(Boolean)) {
+    dialog.addEventListener('click', (event) => {
+      const control = event.target.closest('[data-action]');
+      if (event.target === dialog && dialog === help) { closeDialog(dialog); return; }
+      if (!control) return;
+      const action = control.dataset.action;
+      closeDialog(dialog, () => {
+        if (action === 'help') openHelp();
+        else if (action === 'splash') splash?.showModal();
+        else if (action !== 'close') onAction?.(action);
+      });
+    });
+    dialog.addEventListener('cancel', (event) => { event.preventDefault(); closeDialog(dialog); });
+    dialog.addEventListener('keydown', (event) => {
+      if (event.altKey || event.metaKey || event.ctrlKey) return;
+      const control = dialog.querySelector(`[data-shortcut="${CSS.escape(event.key.toLowerCase())}"]`);
+      if (control) { event.preventDefault(); control.click(); }
+    });
+  }
+  splash?.addEventListener('close', () => {
+    try { localStorage.setItem(seenKey, 'yes'); } catch { /* Private browsing may deny storage. */ }
+  });
+  document.getElementById('help-button')?.addEventListener('click', openHelp);
+  document.addEventListener('keydown', (event) => {
+    const question = event.key === '?' || (event.key === '/' && event.shiftKey);
+    if (!question || keyIsForAField(event) || document.querySelector('dialog[open]')) return;
+    event.preventDefault();
+    openHelp();
+  });
+  let seen = false;
+  try { seen = localStorage.getItem(seenKey) === 'yes'; } catch { /* Treat as a first visit. */ }
+  if (splash && !seen) splash.showModal();
+}
+
+export function setupSite(currentId, options) {
+  paintFlares();
   setupGamePicker(currentId);
   setupSoundToggle();
+  setupDialogs(currentId, options);
 }

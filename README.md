@@ -16,6 +16,10 @@ Open <http://localhost:4173> for Circuit Siege or <http://localhost:4173/ten-que
 
 Import this repository as a new Vercel project. The checked-in `vercel.json` selects the `public/` output directory and skips the build. Connect the repository to get preview deployments on pull requests. Publishing to a public domain is a separate Vercel project decision.
 
+The games are kept out of search so they never crowd the Rapidflare brand's results: every page has `<meta name="robots" content="noindex">` and `vercel.json` sends `X-Robots-Tag: noindex` on every file. Do not add a `robots.txt` that blocks crawlers; a blocked crawler cannot see the noindex, and link previews would break. Sharing still works through the Open Graph and Twitter card tags.
+
+Host the games on their own subdomain or domain (the share tags assume `https://games.rapidflare.ai`), not under a path of the marketing site, and keep them out of its sitemap. If the address changes, update the `og:url`, `og:image` and `twitter:image` tags in both game pages. The share images in `public/og/` are rendered from `og/card.html` with `scripts/og-images.sh` (needs Google Chrome).
+
 ## Project notes
 
 - [GOAL.md](GOAL.md) captures the product direction and constraints.

@@ -15,7 +15,9 @@ Updated: 2026-10-29 (second game, accessibility and sound pass).
 - [x] Slow Circuit Siege down: a simulated player making one move every 1.6 s now survives every October seed (it needed one move a second before).
 - [x] Add pause, keyboard shortcuts for every action, focus management, synthesized sound with a mute toggle, and a shared GAME menu.
 - [x] Build Ten Questions Till Dawn with 100 pre-written puzzles and a daily rotation through all of them.
-- [ ] Connect the GitHub repository to Vercel and choose a public domain when ready. The local Vercel CLI currently reports an invalid token, so repository import needs a refreshed Vercel login or an existing team integration.
+- [x] Keep the games out of search (noindex meta and header), add share cards with rendered images, and add a parody disclaimer.
+- [x] Replace the crowded landing pages with a first-visit splash and an on-demand help panel; draw Flare as a blue flame holding a wrench (Circuit Siege) or a question sign (Ten Questions).
+- [ ] Connect the GitHub repository to Vercel and choose a public domain when ready. The share tags assume `games.rapidflare.ai`; update them if a different address is chosen. The local Vercel CLI currently reports an invalid token, so repository import needs a refreshed Vercel login or an existing team integration.
 
 ## First-release scope
 
