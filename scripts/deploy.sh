@@ -18,7 +18,7 @@ fi
 cd "$(dirname "$0")/.."
 
 export VERCEL_ORG_ID=team_9M9iwOU6o3Njuzwov6Joyu4N
-export VERCEL_PROJECT_ID=rf-games
+export VERCEL_PROJECT_ID=prj_Nxhpn44ev8VI0sOu2G97z2TsT95N # rf-games
 
 args=(deploy --yes --archive=tgz --scope rapidflare --token "$VERCEL_TOKEN")
 if [[ "$target" == production ]]; then
