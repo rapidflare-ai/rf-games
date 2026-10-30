@@ -14,9 +14,10 @@ const TOOLS = {
 
 export function flareSvg(tool = 'wrench') {
   return `<svg viewBox="0 0 64 64" width="1em" height="1em" aria-hidden="true" focusable="false">
-    <defs><linearGradient id="flare-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9cc4ff"/><stop offset="1" stop-color="#4f7fe8"/></linearGradient></defs>
-    <path d="M30 4c4 10 14 14 16 26 4-4 4-10 3-13 7 7 9 17 7 25-3 12-13 18-24 18S10 52 9 40c-1-10 5-18 9-22 0 6 2 10 5 12-1-10 1-19 7-26z" fill="url(#flare-body)"/>
-    <path d="M32 26c4 6 10 11 10 19 0 7-5 11-10 11s-10-4-10-11c0-7 6-12 10-19z" fill="#bcd6ff"/>
+    <defs><linearGradient id="flare-body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8db8ff"/><stop offset="1" stop-color="#4f7fe8"/></linearGradient></defs>
+    <path d="M17 17c-6 8-9 16-9 25 0 13 10 21 24 21s24-8 24-21c0-9-3-17-10-25 1 8-1 14-5 18-2-10-7-17-11-31-5 9-9 18-8 30-5-3-7-9-5-17z" fill="url(#flare-body)"/>
+    <path d="M30 4c2 10 11 17 11 30-3-3-5-7-7-10 1 8-1 13-4 17-5-5-8-11-8-17 0-7 3-14 8-20z" fill="#adcfff"/>
+    <path d="M32 30c4 6 10 11 10 19 0 7-5 11-10 11s-10-4-10-11c0-7 6-12 10-19z" fill="#bcd6ff"/>
     <ellipse cx="28.5" cy="44" rx="1.7" ry="2.5" fill="#1b2340"/><ellipse cx="35.5" cy="44" rx="1.7" ry="2.5" fill="#1b2340"/>
     <path d="M29 49.5q3 2.6 6 0" fill="none" stroke="#1b2340" stroke-width="1.6" stroke-linecap="round"/>
     ${TOOLS[tool] ?? ''}
