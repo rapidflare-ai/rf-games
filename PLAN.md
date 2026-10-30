@@ -1,6 +1,6 @@
 # Plan and handoff
 
-Updated: 2026-10-29 (second game, accessibility and sound pass).
+Updated: 2026-10-29 (Haunted Circuit Siege controls pass).
 
 ## Current status
 
@@ -18,20 +18,14 @@ Updated: 2026-10-29 (second game, accessibility and sound pass).
 - [x] Keep the games out of search (noindex meta and header), add share cards with rendered images, and add a parody disclaimer.
 - [x] Replace the crowded landing pages with a first-visit splash and an on-demand help panel; draw Flare as a blue flame holding a wrench (Circuit Siege) or a question sign (Ten Questions).
 - [x] Add the token based Vercel CLI workflow used by other Rapidflare repos, without a Vercel Git import.
-- [x] Open [PR #2](https://github.com/rapidflare-ai/rf-games/pull/2) with the workflow and deployment instructions.
+- [x] Merge [PR #2](https://github.com/rapidflare-ai/rf-games/pull/2) with the workflow and deployment instructions.
 - [x] Create the `rf-games` Vercel project in the Rapidflare team, without a Git import.
-- [ ] Add the `VERCEL_TOKEN` Actions secret, run the first deployment, and attach `games.rapidflare.ai` (the share tags assume it; update them if a different address is chosen).
+- [x] Add the `VERCEL_TOKEN` Actions secret, run the first deployment, and attach `games.rapidflare.ai` (HTTP 200 from Vercel on 2026-10-29).
+- [x] Add drag and drop from the tray onto a bay, a visible pause planning mode, Q/W/E lane keys, 1–5 part keys, and an always visible quick guide. Clarify Flare Auto-Fit and when diagnostics advance.
 
 ## Resume here
 
-[PR #2](https://github.com/rapidflare-ai/rf-games/pull/2) (`codex/token-vercel-deploy`) adds the deploy workflow; it has been rebased onto `main` after both games merged. The `rf-games` Vercel project exists in the Rapidflare team with no Git import. Do not import or connect the GitHub repository in Vercel.
-
-1. Create a Vercel token with access to the Rapidflare team and add it as the `VERCEL_TOKEN` repository Actions secret in `rapidflare-ai/rf-games`. GitHub does not expose existing secrets, so the `rf-ux`/`rf-docs` token cannot be copied.
-2. Rerun PR #2's **Deploy to Vercel** workflow and check its preview URL: both games, `/updates`, and the `X-Robots-Tag: noindex` header.
-3. Merge PR #2; the push to `main` starts the first production deployment. If needed, dispatch the workflow on `main` manually to retry.
-4. Add `games.rapidflare.ai` under the project's Domains and create the DNS record Vercel shows. Then check the share cards in a link-preview debugger.
-
-`README.md` has the deploy commands, and `scripts/deploy.sh` also deploys by hand for someone with the token.
+The current controls change is on `codex/haunted-drag-drop`, branched from `origin/main` at `155b5fb` after PR #2 merged. Open its PR, review the preview deployment, and merge when ready. The game is live at `games.rapidflare.ai`; the repository deploys through GitHub Actions with a Vercel token and has no Vercel Git import. `README.md` has the deploy commands, and `scripts/deploy.sh` also deploys by hand for someone with the token.
 
 ## First-release scope
 
@@ -45,8 +39,6 @@ Updated: 2026-10-29 (second game, accessibility and sound pass).
 
 The site is static under `public/`; `vercel.json` points Vercel there. `public/engine.mjs` owns deterministic rules and diagnostics; `public/themes.mjs` owns theme data and the `ACTIVE_THEME` launch switch; `public/game.mjs` is the browser UI. Upcoming themes are disabled in the dropdown. `public/updates.html` is an email signup painted door: inputs are disabled and no addresses are collected. The daily challenge uses the UTC date so it is common worldwide. The game needs no runtime credentials; the deploy workflow needs a Vercel token.
 
-Verification after the diagnostic and theme-lock revision: `node --test tests/*.test.mjs` passes (seven rule checks); browser play confirmed the diagnostic appears instead of a named part, no tray component is highlighted, a wrong fit does not disclose the answer, and a correct fit enables launch. The active Halloween theme and disabled “coming soon” options rendered correctly. The Updates page rendered with both signup controls disabled and an explicit no-collection message. Both pages fit a 390px viewport without horizontal overflow. Earlier repair-and-launch verification also confirmed a full result flow and that a scripted defense survived all 31 October seeds. Vercel preview remains pending until the project and token are provisioned.
-
-PR #2's latest Actions run passed checkout, Node setup, and the seven game checks, then stopped at the explicit token check. This confirms that the repository secret is the immediate setup blocker. The deployment script also passed `bash -n` and a mock CLI check for preview and production flags; workflow YAML parsed successfully. No live Vercel deployment has been tested yet.
+Verification for the controls change: `node --test tests/*.test.mjs` passes all 18 checks. Browser play confirmed selecting a bay leaves its diagnostic unchanged; fitting the fighter's PCIe upgrade advances the bay to `1/2 · AI SIGNAL STILL LIVE`; dragging the jammer onto it completes the repair. Pausing froze the wave while leaving lane selection available, and pressing `3` fitted PCIe and resumed. The first bay is selected and visibly marked `ACTIVE BAY` at round start. A stale open `4173` browser tab showed the prior UI until reloaded; the current source and a fresh `4173` tab show Flare. Legacy internal names were removed from both games, and the separate candidate game in `GAMES.md` was renamed Repair the Bot.
 
 Open questions for a later iteration: whether to add a leaderboard, how to measure return play without tracking, and whether to promote a second game from `GAMES.md`.

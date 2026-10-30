@@ -28,7 +28,7 @@ function prettyDay(key) {
 }
 
 function setMessage(message) {
-  $('patch-message').textContent = `FLARE: ${message}`;
+  $('flare-message').textContent = `FLARE: ${message}`;
 }
 
 // Show one overlay card (or none) and keep the controls behind it out of the tab order.

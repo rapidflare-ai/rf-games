@@ -69,7 +69,7 @@ test('fighter needs a PCIe upgrade before its jammer', () => {
   assert.equal(game.shots[0].damage, 2);
 });
 
-test('Patch assist installs the needed component and has a limit', () => {
+test('Flare auto-fit installs the needed component and has a limit', () => {
   const game = createGame(8);
   assert.equal(useAssist(game, 2).part, 'power');
   assert.equal(game.bays[2].ready, true);
