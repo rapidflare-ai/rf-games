@@ -1,5 +1,5 @@
 .cabinet{position:relative}
-.tq-overlay{z-index:20;border-radius:12px}
+.tq-overlay{z-index:20;border-radius:12px;align-items:start;padding-top:clamp(24px,4vw,48px)}
 .night-board{height:250px;overflow:clip}
 .hud span:first-child strong{color:#f5edf0}
 .sun{position:absolute;left:50%;bottom:-120px;width:150px;height:150px;margin-left:-75px;border-radius:50%;background:radial-gradient(circle,#ffe7a6,#ffad5b 55%,#ff7a3d00 72%);opacity:0;transition:bottom 1.4s ease-out,opacity 1.4s}

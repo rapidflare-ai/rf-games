@@ -4,6 +4,7 @@ import { sfx } from './audio.mjs';
 import { focusIsOnControl, keyBelongsToControl, setupSite } from './site.mjs';
 import { ACTIVE_THEME, paintGhoul, THEMES } from './themes.mjs';
 import { track } from './analytics.mjs';
+import { prepareResultImage, shareResultImage } from './result-share.mjs';
 
 const $ = (id) => document.getElementById(id);
 const lanes = [...document.querySelectorAll('.lane')];
@@ -26,6 +27,7 @@ let lastStomp = 0;
 let paused = false;
 let focusBeforePause = null;
 let draggingPart = null;
+let shareImagePromise = null;
 const botNodes = new Map();
 const shotNodes = new Map();
 
@@ -46,6 +48,7 @@ function prettyDay(key) {
 function showCard(name) {
   for (const [key, card] of Object.entries(cards)) card.classList.toggle('hidden', key !== name);
   overlay.classList.toggle('hidden', !name);
+  $('game-board').classList.toggle('result-active', name === 'result');
   document.querySelector('.lane-list').inert = Boolean(name);
   document.querySelector('.control-panel').inert = Boolean(name);
 }
@@ -263,6 +266,7 @@ function resetActors() {
 
 function startRound(requestedMode, seed) {
   cancelAnimationFrame(frame);
+  shareImagePromise = null;
   cards.result.classList.remove('won', 'lost');
   mode = requestedMode;
   activeSeed = seed ?? (mode === 'daily' ? seedFromText(`circuit-siege-v3:${dayKey}`) : freshPracticeSeed());
@@ -339,13 +343,25 @@ function finishRound() {
     } else bestText = `YOUR DAILY BEST · ${prior}`;
   }
   $('best-line').textContent = bestText;
+  shareImagePromise = prepareResultImage({
+    game: 'Haunted Circuit Siege', number: '001', won, mode, day: dayKey,
+    headline: won ? ['WE HELD', 'THE LINE'] : ['THE SHELTER', 'FELL'],
+    stats: [
+      { label: 'Ghouls stopped', value: `${game.kills}/${game.wave.length}` },
+      { label: 'Core', value: `${game.core}/3` },
+      { label: 'Score', value: points },
+    ],
+    url: `${location.origin}${location.pathname}`,
+  }).catch(() => null);
   showCard('result');
-  $('share-button').focus();
+  cards.result.scrollIntoView({ block: 'start', behavior: 'auto' });
+  $('share-button').focus({ preventScroll: true });
 }
 
 function returnHome() {
   cancelAnimationFrame(frame);
   game = null;
+  shareImagePromise = null;
   paused = false;
   draggingPart = null;
   selectedLane = 0;
@@ -368,15 +384,13 @@ async function shareResult() {
   const text = shareText();
   const url = `${location.origin}${location.pathname}`;
   try {
-    if (navigator.share) {
-      await navigator.share({ title: 'Circuit Siege', text, url });
-      track('Game Result Shared', { game: 'circuit-siege', mode, method: 'native' });
-      return;
+    const method = await shareResultImage({ imagePromise: shareImagePromise, title: 'Circuit Siege', text, url });
+    track('Game Result Shared', { game: 'circuit-siege', mode, method });
+    if (method.startsWith('copy')) {
+      $('share-button').innerHTML = method === 'copy-image' ? 'CARD COPIED! <span>✓</span>' : 'TEXT COPIED! <span>✓</span>';
+      setMessage(method === 'copy-image' ? 'Paste your result card into a post.' : 'Paste your result and link into a post.');
+      setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
     }
-    await navigator.clipboard.writeText(`${text}\n${url}`);
-    track('Game Result Shared', { game: 'circuit-siege', mode, method: 'copy' });
-    $('share-button').innerHTML = 'COPIED! <span>✓</span>';
-    setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
   } catch (error) {
     if (error?.name === 'AbortError') return;
     setMessage('Sharing is unavailable in this browser. Try copying the page link.');

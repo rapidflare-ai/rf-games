@@ -37,6 +37,8 @@ The games and the About page are indexable. Each page has a canonical URL and id
 
 Host the games on their own subdomain or domain (the share tags assume `https://games.rapidflare.ai`), not under a path of the marketing site. If the address changes, update canonical and share URLs in the HTML pages, `robots.txt`, and `sitemap.xml`. The share images in `public/og/` are rendered from `og/card.html` with `scripts/og-images.sh` (needs Google Chrome).
 
+After a deployment, check that both `/og/circuit-siege.png` and `/og/ten-questions.png` return an image, then paste each game URL into a social preview checker such as LinkedIn Post Inspector. The result button generates a personal PNG with the player's outcome and score. On devices that accept image files through the native share sheet, it shares that PNG with result text and the game URL. Other browsers use the native link share sheet, copy the image and text together, or copy the result text and URL, depending on their capabilities. The Open Graph image is a generic game preview for links pasted into social sites; a static site cannot make a unique social preview for each player's score.
+
 ## Optional Mixpanel analytics
 
 The game pages, About page, and Updates page show an optional analytics choice only when a Mixpanel project token is configured. The Mixpanel browser SDK loads only after a visitor accepts. Visitors can reopen **Analytics settings** and decline later. No event is sent before consent. The site tracks page views, About link clicks, game starts and finishes, Help opens, Flare Auto-Fit uses, and result shares. Game events include the game and daily or practice mode; no puzzle answers or personal information are sent in custom properties.
