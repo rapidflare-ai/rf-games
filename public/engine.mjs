@@ -195,7 +195,7 @@ export function tick(game, seconds) {
 }
 
 export function score(game) {
-  return Math.max(0, game.kills * 100 + game.core * 250 + game.launches * 5 - game.mistakes * 15);
+  return Math.max(0, Math.min(game.kills, game.wave.length) * 100 + game.core * 250 - game.mistakes * 15);
 }
 
 export function urgentLane(game) {

@@ -64,16 +64,17 @@
             <div class="core-tower" aria-hidden="true"><span>HUMAN<br>SHELTER</span><i></i></div>
             <div class="moon" aria-hidden="true"></div>
             <div class="lane-list">
-              <button class="lane selected" type="button" data-lane="0" aria-keyshortcuts="1" aria-label="Select scout drone bay">
-                <span class="lane-name"><kbd aria-hidden="true">1</kbd> <b>ROOFTOPS</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">✦</span><span class="bay-detail"><strong>SCOUT DRONE</strong><small class="requirement">POSITION UNKNOWN</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
+              <button class="lane selected" type="button" data-lane="0" aria-keyshortcuts="Q" aria-label="Select scout drone bay">
+                <span class="lane-name"><kbd aria-hidden="true">Q</kbd> <b>ROOFTOPS</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">✦</span><span class="bay-detail"><strong>SCOUT DRONE</strong><small class="requirement">POSITION UNKNOWN</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
               </button>
-              <button class="lane" type="button" data-lane="1" aria-keyshortcuts="2" aria-label="Select fighter jet bay">
-                <span class="lane-name"><kbd aria-hidden="true">2</kbd> <b>MAIN ST.</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">➤</span><span class="bay-detail"><strong>FIGHTER JET</strong><small class="requirement">EXPANSION BUS MISSING</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
+              <button class="lane" type="button" data-lane="1" aria-keyshortcuts="W" aria-label="Select fighter jet bay">
+                <span class="lane-name"><kbd aria-hidden="true">W</kbd> <b>MAIN ST.</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">➤</span><span class="bay-detail"><strong>FIGHTER JET</strong><small class="requirement">EXPANSION BUS MISSING</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
               </button>
-              <button class="lane" type="button" data-lane="2" aria-keyshortcuts="3" aria-label="Select rescue rover bay">
-                <span class="lane-name"><kbd aria-hidden="true">3</kbd> <b>SUBSTATION</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">▣</span><span class="bay-detail"><strong>RESCUE ROVER</strong><small class="requirement">POWER DEPLETED</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
+              <button class="lane" type="button" data-lane="2" aria-keyshortcuts="E" aria-label="Select rescue rover bay">
+                <span class="lane-name"><kbd aria-hidden="true">E</kbd> <b>SUBSTATION</b></span><span class="rail"></span><span class="bay-card"><span class="craft-icon">▣</span><span class="bay-detail"><strong>RESCUE ROVER</strong><small class="requirement">POWER DEPLETED</small></span></span><span class="shot-layer"></span><span class="bot-layer"></span>
               </button>
             </div>
+            <div id="pause-banner" class="pause-banner" hidden><span><strong>PAUSED · FIT OR LAUNCH TO RESUME</strong></span><button id="resume-button" type="button">RESUME</button><button id="quit-button" type="button">QUIT</button></div>
             <div id="screen-overlay" class="screen-overlay">
               <div class="overlay-card" id="intro-card">
                 <div class="tiny-kicker">INCOMING TRANSMISSION</div>
@@ -83,15 +84,6 @@
                 <div class="intro-actions">
                   <button id="daily-start" class="primary-button" type="button" aria-keyshortcuts="D">PLAY TODAY'S WAVE <kbd aria-hidden="true">D</kbd></button>
                   <button id="practice-start" class="text-button" type="button" aria-keyshortcuts="R">PRACTICE RUN <kbd aria-hidden="true">R</kbd></button>
-                </div>
-              </div>
-              <div class="overlay-card hidden" id="pause-card">
-                <div class="tiny-kicker">PAUSED</div>
-                <h2>CATCH YOUR<br><em>BREATH.</em></h2>
-                <p>The ghouls are frozen in place. Take as long as you need.</p>
-                <div class="intro-actions">
-                  <button id="resume-button" class="primary-button" type="button" aria-keyshortcuts="Escape">RESUME <kbd aria-hidden="true">Esc</kbd></button>
-                  <button id="quit-button" class="text-button" type="button">QUIT TO MENU <span>→</span></button>
                 </div>
               </div>
               <div class="overlay-card result-card hidden" id="result-card" aria-live="polite">
@@ -110,16 +102,17 @@
           </div>
 
           <div class="control-panel">
-            <div class="panel-title"><span class="patch-face flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="wrench"></span><small>FLARE</small></span><span>FLARE'S REPAIR BAY<small id="selected-bay" class="selected-bay">SCOUT DRONE · POSITION UNKNOWN</small></span><button id="assist-button" class="assist-button" type="button" aria-keyshortcuts="A">FLARE ASSIST ×3 <kbd aria-hidden="true">A</kbd></button></div>
-            <div class="parts-title"><span>COMPONENT TRAY</span><span>SOLVE THE DIAGNOSTIC</span></div>
+            <div class="panel-title"><span class="flare-face flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="wrench"></span><small>FLARE</small></span><span>FLARE'S REPAIR BAY<small id="selected-bay" class="selected-bay">SCOUT DRONE · POSITION UNKNOWN</small></span><button id="assist-button" class="assist-button" type="button" aria-keyshortcuts="A" title="Flare fits one correct component in the selected bay. Three uses per wave.">FLARE AUTO-FIT ×3 <kbd aria-hidden="true">A</kbd></button></div>
+            <div class="parts-title"><span>COMPONENT TRAY</span><span>DRAG TO A BAY OR TAP TO FIT</span></div>
             <div class="parts-tray">
-              <button type="button" class="part" data-part="gps" aria-keyshortcuts="G"><span class="part-icon">⌁</span><span>GPS<br>ANTENNA</span><kbd aria-hidden="true">G</kbd></button>
-              <button type="button" class="part" data-part="sensor" aria-keyshortcuts="O"><span class="part-icon">◉</span><span>OPTICAL<br>SENSOR</span><kbd aria-hidden="true">O</kbd></button>
-              <button type="button" class="part" data-part="pcie" aria-keyshortcuts="P"><span class="part-icon">▤</span><span>PCIe<br>UPGRADE</span><kbd aria-hidden="true">P</kbd></button>
-              <button type="button" class="part" data-part="jammer" aria-keyshortcuts="J"><span class="part-icon">⌗</span><span>SIGNAL<br>JAMMER</span><kbd aria-hidden="true">J</kbd></button>
-              <button type="button" class="part" data-part="power" aria-keyshortcuts="B"><span class="part-icon">ϟ</span><span>POWER<br>CELL</span><kbd aria-hidden="true">B</kbd></button>
+              <button type="button" class="part" data-part="gps" draggable="true" aria-keyshortcuts="1"><span class="part-icon">⌁</span><span>GPS<br>ANTENNA</span><kbd aria-hidden="true">1</kbd></button>
+              <button type="button" class="part" data-part="sensor" draggable="true" aria-keyshortcuts="2"><span class="part-icon">◉</span><span>OPTICAL<br>SENSOR</span><kbd aria-hidden="true">2</kbd></button>
+              <button type="button" class="part" data-part="pcie" draggable="true" aria-keyshortcuts="3"><span class="part-icon">▤</span><span>PCIe<br>UPGRADE</span><kbd aria-hidden="true">3</kbd></button>
+              <button type="button" class="part" data-part="jammer" draggable="true" aria-keyshortcuts="4"><span class="part-icon">⌗</span><span>SIGNAL<br>JAMMER</span><kbd aria-hidden="true">4</kbd></button>
+              <button type="button" class="part" data-part="power" draggable="true" aria-keyshortcuts="5"><span class="part-icon">ϟ</span><span>POWER<br>CELL</span><kbd aria-hidden="true">5</kbd></button>
             </div>
-            <div class="launch-row"><button id="launch-button" class="launch-button" type="button" aria-keyshortcuts="L Space" disabled>REPAIR TO LAUNCH <span>→</span></button><span id="patch-message" class="patch-message" role="status">FLARE: Read the diagnostic and choose a component that solves it. I can help three times.</span></div>
+            <div class="launch-row"><button id="launch-button" class="launch-button" type="button" aria-keyshortcuts="L Space" disabled>REPAIR TO LAUNCH <span>→</span></button><span id="flare-message" class="flare-message" role="status">FLARE: Read the diagnostic and choose a component that solves it. I can help three times.</span></div>
+            <p class="quick-keys" aria-label="Quick keyboard guide"><span>LANES <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd></span><span>PARTS <kbd>1</kbd>–<kbd>5</kbd></span><span>LAUNCH <kbd>Space</kbd></span><span>AUTO-FIT <kbd>A</kbd></span><span>PAUSE <kbd>Esc</kbd></span></p>
           </div>
         </section>
 
@@ -149,15 +142,15 @@
 
     <dialog id="help-panel" class="help-panel" aria-labelledby="help-title">
       <div class="help-head"><h2 id="help-title">HOW TO PLAY</h2><button type="button" class="help-close" data-action="close" aria-label="Close help"><span aria-hidden="true">✕</span> <kbd aria-hidden="true">Esc</kbd></button></div>
-      <p>Pick a craft bay and read its fault. Choose the component that fixes it, then launch your craft from the shelter. The fighter needs two repairs. Wrong fits cost points; Flare can fit three parts for you. Opening this panel pauses the game.</p>
+      <p>Pick a craft bay and read its fault. Tap a component or drag it directly onto the bay, then launch from the shelter. Selecting a bay does not change its fault. A correct fit advances the fighter to its second fault; launching gives the bay a new fault. Wrong fits cost points. Flare Auto-Fit solves one fault per use, three times per wave. Pause with the visible button to inspect the board; fitting or launching resumes play. Opening this panel also pauses the game.</p>
       <p class="help-note"><strong>One wave, every day.</strong> The daily wave is the same worldwide until midnight UTC. Practice runs are unlimited. No account needed.</p>
       <h3 class="micro-label">KEYBOARD</h3>
       <dl class="key-list">
-        <div><dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> or <kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Choose a lane</dd></div>
-        <div><dt><kbd>G</kbd> <kbd>O</kbd> <kbd>P</kbd> <kbd>J</kbd> <kbd>B</kbd></dt><dd>Fit GPS, optical sensor, PCIe, jammer, power cell</dd></div>
+        <div><dt><kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> or <kbd>↑</kbd> <kbd>↓</kbd></dt><dd>Choose a lane</dd></div>
+        <div><dt><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> <kbd>5</kbd></dt><dd>Fit GPS, optical sensor, PCIe, jammer, power cell</dd></div>
         <div><dt><kbd>Space</kbd> or <kbd>L</kbd></dt><dd>Launch the selected craft</dd></div>
-        <div><dt><kbd>A</kbd></dt><dd>Flare assist</dd></div>
-        <div><dt><kbd>Esc</kbd></dt><dd>Pause or resume; close this panel</dd></div>
+        <div><dt><kbd>A</kbd></dt><dd>Flare auto-fits one correct part</dd></div>
+        <div><dt><kbd>Esc</kbd></dt><dd>Pause or resume; close this panel. Fitting or launching while paused also resumes.</dd></div>
         <div><dt><kbd>D</kbd> <kbd>R</kbd> <kbd>S</kbd></dt><dd>Daily wave, practice or retry, share (on the menu cards)</dd></div>
         <div><dt><kbd>?</kbd></dt><dd>Open this help</dd></div>
         <div><dt><kbd>M</kbd></dt><dd>Sound on or off</dd></div>

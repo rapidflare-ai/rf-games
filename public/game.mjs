@@ -8,7 +8,7 @@ const lanes = [...document.querySelectorAll('.lane')];
 const parts = [...document.querySelectorAll('.part')];
 const themeSelect = $('theme-select');
 const overlay = $('screen-overlay');
-const cards = { intro: $('intro-card'), pause: $('pause-card'), result: $('result-card') };
+const cards = { intro: $('intro-card'), result: $('result-card') };
 const dayKey = utcDayKey();
 const themeName = ACTIVE_THEME;
 const STOMP_SECONDS = 0.9;
@@ -23,6 +23,7 @@ let lastHint = 0;
 let lastStomp = 0;
 let paused = false;
 let focusBeforePause = null;
+let draggingPart = null;
 const botNodes = new Map();
 const shotNodes = new Map();
 
@@ -98,7 +99,7 @@ function setHtml(node, html) {
 }
 
 function setMessage(message) {
-  $('patch-message').textContent = `FLARE: ${message}`;
+  $('flare-message').textContent = `FLARE: ${message}`;
 }
 
 function updateHud() {
@@ -110,6 +111,9 @@ function updateHud() {
   $('cabinet-label').textContent = running && mode === 'practice' ? 'PRACTICE DEFENSE' : 'DAILY DEFENSE';
   $('day-label').textContent = running ? `${game.spawnIndex}/${game.wave.length} INCOMING` : prettyDay(dayKey);
   $('pause-button').disabled = !running;
+  setHtml($('pause-button'), paused ? 'RESUME <kbd aria-hidden="true">Esc</kbd>' : 'PAUSE <kbd aria-hidden="true">Esc</kbd>');
+  $('pause-button').setAttribute('aria-label', paused ? 'Resume the game' : 'Pause the game and plan your next move');
+  $('pause-banner').hidden = !paused;
 
   for (let lane = 0; lane < LANE_COUNT; lane += 1) {
     const bay = game?.bays[lane];
@@ -118,7 +122,8 @@ function updateHud() {
     const needed = bay ? neededPart(game, lane) : [['gps'], ['pcie'], ['power']][lane][0];
     const nearest = game?.bots.filter((bot) => bot.lane === lane).sort((a, b) => a.x - b.x)[0];
     const threat = nearest ? `. ${THEMES[themeName].enemy[nearest.kind]} ${nearest.x < 0.4 ? 'close to the shelter' : 'approaching'}` : '';
-    requirement.textContent = bay?.ready ? 'READY · TAP TO LAUNCH' : DIAGNOSTICS[needed].label;
+    const progress = bay?.installed && !bay.ready ? `${bay.installed}/${bay.queue.length} · ` : '';
+    requirement.textContent = bay?.ready ? 'READY · TAP TO LAUNCH' : `${progress}${DIAGNOSTICS[needed].label}`;
     card.classList.toggle('ready', Boolean(bay?.ready));
     lanes[lane].classList.toggle('selected', selectedLane === lane);
     lanes[lane].setAttribute('aria-pressed', String(selectedLane === lane));
@@ -131,8 +136,9 @@ function updateHud() {
   const needed = selectedBay ? neededPart(game, selectedLane) : ['gps', 'pcie', 'power'][selectedLane];
   $('selected-bay').textContent = selectedBay?.ready
     ? `${CRAFTS[selectedLane].name.toUpperCase()} · READY TO LAUNCH`
-    : `${CRAFTS[selectedLane].name.toUpperCase()} · ${DIAGNOSTICS[needed].label}`;
-  setHtml($('assist-button'), `FLARE ASSIST ×${game?.assists ?? 3} <kbd aria-hidden="true">A</kbd>`);
+    : `${CRAFTS[selectedLane].name.toUpperCase()} · ${selectedBay?.installed ? `${selectedBay.installed}/${selectedBay.queue.length} · ` : ''}${DIAGNOSTICS[needed].label}`;
+  setHtml($('assist-button'), `FLARE AUTO-FIT ×${game?.assists ?? 3} <kbd aria-hidden="true">A</kbd>`);
+  $('assist-button').setAttribute('aria-label', `Flare auto-fits one correct part in the selected bay. ${game?.assists ?? 3} uses left.`);
   $('assist-button').disabled = !running || game.assists === 0 || Boolean(selectedBay?.ready);
   $('launch-button').disabled = !running || !selectedBay?.ready;
   setHtml($('launch-button'), selectedBay?.ready
@@ -249,9 +255,10 @@ function startRound(requestedMode, seed) {
   lastHint = 0;
   lastStomp = 0;
   paused = false;
+  draggingPart = null;
   resetActors();
   showCard(null);
-  setMessage(`${DIAGNOSTICS[neededPart(game, 0)].hint} Pick a component that solves it. I can help three times.`);
+  setMessage(`${DIAGNOSTICS[neededPart(game, 0)].hint} Choose a part or drag it onto a bay. My Auto-Fit can solve one step, three times per wave.`);
   updateHud();
   sfx.select();
   lastFrame = performance.now();
@@ -271,23 +278,23 @@ function pauseRound() {
   paused = true;
   cancelAnimationFrame(frame);
   focusBeforePause = document.activeElement;
-  showCard('pause');
-  setMessage('Paused. Press Escape or Resume when you are ready.');
-  $('resume-button').focus();
+  updateHud();
+  setMessage('Paused. Inspect the bays, then fit a part or launch to resume instantly.');
 }
 
-function resumeRound() {
+function resumeRound({ focus = true, announce = true } = {}) {
   if (!game || game.status !== 'running' || !paused) return;
   paused = false;
-  showCard(null);
-  setMessage('Back in action.');
+  updateHud();
+  if (announce) setMessage('Back in action.');
   lastFrame = performance.now();
   frame = requestAnimationFrame(loop);
-  (focusBeforePause?.isConnected && !focusBeforePause.closest('.screen-overlay') ? focusBeforePause : lanes[selectedLane]).focus({ preventScroll: true });
+  if (focus) (focusBeforePause?.isConnected && !focusBeforePause.closest('.screen-overlay') ? focusBeforePause : lanes[selectedLane]).focus({ preventScroll: true });
 }
 
 function finishRound() {
   cancelAnimationFrame(frame);
+  paused = false;
   renderActors();
   updateHud();
   const won = game.core > 0;
@@ -301,7 +308,8 @@ function finishRound() {
   $('result-score').textContent = String(points).padStart(4, '0');
   let bestText = mode === 'daily' ? 'Daily wave · UTC' : 'Practice run';
   if (mode === 'daily') {
-    const key = `rf-games-best-v3:${dayKey}`;
+    // The v4 key starts a fresh local best after removing launch-count points.
+    const key = `rf-games-best-v4:${dayKey}`;
     const prior = Number(readStorage(key) || 0);
     if (points > prior) {
       writeStorage(key, String(points));
@@ -317,10 +325,11 @@ function returnHome() {
   cancelAnimationFrame(frame);
   game = null;
   paused = false;
+  draggingPart = null;
   selectedLane = 0;
   resetActors();
   showCard('intro');
-  setMessage('Select a bay, read its diagnostic, fit the right part, then launch. I can help three times.');
+  setMessage('Select a bay, solve its diagnostic, and launch. My Auto-Fit can solve one step, three times per wave.');
   updateHud();
   $('daily-start').focus();
 }
@@ -351,7 +360,7 @@ async function shareResult() {
 }
 
 function selectLane(lane) {
-  if (!game || game.status !== 'running' || paused) return;
+  if (!game || game.status !== 'running') return;
   selectedLane = (lane + LANE_COUNT) % LANE_COUNT;
   sfx.click();
   updateHud();
@@ -360,13 +369,14 @@ function selectLane(lane) {
 }
 
 function installSelected(part) {
-  if (!game || game.status !== 'running' || paused) return;
+  if (!game || game.status !== 'running') return;
+  if (paused) resumeRound({ focus: false, announce: false });
   const response = installPart(game, selectedLane, part);
   if (response.ok) {
     sfx.good();
     setMessage(response.ready
       ? `${CRAFTS[selectedLane].name} repaired. Press Space to launch!`
-      : `Good fit. New diagnostic: ${DIAGNOSTICS[response.next].hint}`);
+      : `${PARTS[part].name} fitted. Next fault in this bay: ${DIAGNOSTICS[response.next].hint}`);
   } else {
     sfx.bad();
     setMessage(`${response.reason}.`);
@@ -375,20 +385,22 @@ function installSelected(part) {
 }
 
 function launchSelected() {
-  if (!game || game.status !== 'running' || paused) return;
+  if (!game || game.status !== 'running') return;
+  if (paused) resumeRound({ focus: false, announce: false });
   const response = launchCraft(game, selectedLane);
   if (response.ok) sfx.launch(); else sfx.bad();
-  setMessage(response.ok ? `${CRAFTS[selectedLane].name} launched from the shelter!` : `${response.reason}.`);
+  setMessage(response.ok ? `${CRAFTS[selectedLane].name} launched! New fault in this bay: ${DIAGNOSTICS[neededPart(game, selectedLane)].hint}` : `${response.reason}.`);
   updateHud();
   renderActors();
 }
 
 function assistSelected() {
-  if (!game || game.status !== 'running' || paused) return;
+  if (!game || game.status !== 'running') return;
+  if (paused) resumeRound({ focus: false, announce: false });
   const response = useAssist(game, selectedLane);
   if (response.ok) sfx.good(); else sfx.bad();
   setMessage(response.ok
-    ? response.ready ? `I fitted the ${PARTS[response.part].name}. Craft ready to launch!` : `I fitted the ${PARTS[response.part].name}. Next diagnostic: ${DIAGNOSTICS[response.next].hint}`
+    ? response.ready ? `I auto-fitted the ${PARTS[response.part].name}. Craft ready to launch!` : `I auto-fitted the ${PARTS[response.part].name}. Next fault in this bay: ${DIAGNOSTICS[response.next].hint}`
     : `${response.reason}.`);
   updateHud();
 }
@@ -408,13 +420,48 @@ for (const button of lanes) button.addEventListener('click', () => {
   else selectLane(lane);
 });
 for (const button of parts) button.addEventListener('click', () => installSelected(button.dataset.part));
+function clearDrag() {
+  draggingPart = null;
+  for (const button of parts) button.classList.remove('dragging');
+  for (const button of lanes) button.classList.remove('drop-target');
+}
+for (const button of parts) {
+  button.addEventListener('dragstart', (event) => {
+    if (!game || game.status !== 'running') { event.preventDefault(); return; }
+    draggingPart = button.dataset.part;
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', draggingPart);
+    button.classList.add('dragging');
+  });
+  button.addEventListener('dragend', clearDrag);
+}
+for (const button of lanes) {
+  button.addEventListener('dragover', (event) => {
+    if (!draggingPart || !game || game.status !== 'running') return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    button.classList.add('drop-target');
+  });
+  button.addEventListener('dragleave', (event) => {
+    if (!button.contains(event.relatedTarget)) button.classList.remove('drop-target');
+  });
+  button.addEventListener('drop', (event) => {
+    if (!draggingPart || !game || game.status !== 'running') return;
+    event.preventDefault();
+    const part = draggingPart;
+    clearDrag();
+    selectLane(Number(button.dataset.lane));
+    installSelected(part);
+  });
+}
 $('assist-button').addEventListener('click', assistSelected);
 $('launch-button').addEventListener('click', launchSelected);
-$('pause-button').addEventListener('click', pauseRound);
-$('resume-button').addEventListener('click', resumeRound);
+$('pause-button').addEventListener('click', () => { if (paused) resumeRound(); else pauseRound(); });
+$('resume-button').addEventListener('click', () => resumeRound());
 $('quit-button').addEventListener('click', returnHome);
 
-const PART_KEYS = { g: 'gps', o: 'sensor', p: 'pcie', j: 'jammer', b: 'power' };
+const PART_KEYS = { 1: 'gps', 2: 'sensor', 3: 'pcie', 4: 'jammer', 5: 'power' };
+const LANE_KEYS = { q: 0, w: 1, e: 2 };
 document.addEventListener('keydown', (event) => {
   if (keyBelongsToControl(event)) return;
   const key = event.key.toLowerCase();
@@ -432,8 +479,7 @@ document.addEventListener('keydown', (event) => {
   }
   if (!game || game.status !== 'running') return;
   if (key === 'escape') { event.preventDefault(); if (paused) resumeRound(); else pauseRound(); return; }
-  if (paused) return;
-  if (/^[1-3]$/.test(key)) { event.preventDefault(); selectLane(Number(key) - 1); }
+  if (LANE_KEYS[key] !== undefined) { event.preventDefault(); selectLane(LANE_KEYS[key]); }
   else if (key === 'arrowup' || key === 'arrowdown') {
     event.preventDefault();
     selectLane(selectedLane + (key === 'arrowup' ? -1 : 1));
