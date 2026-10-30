@@ -3,6 +3,7 @@ import { sfx } from '../audio.mjs';
 import { focusIsOnControl, keyBelongsToControl, setupSite } from '../site.mjs';
 import { ACTIVE_THEME, paintGhoul, THEMES } from '../themes.mjs';
 import { track } from '../analytics.mjs';
+import { prepareResultImage, shareResultImage } from '../result-share.mjs';
 
 const $ = (id) => document.getElementById(id);
 const overlay = $('screen-overlay');
@@ -14,6 +15,7 @@ const PART_KEYS = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'];
 let round = null;
 let mode = 'daily';
 let selectedPart = null;
+let shareImagePromise = null;
 
 function readStorage(key) {
   try { return localStorage.getItem(key); } catch { return null; }
@@ -272,6 +274,16 @@ function finishRound() {
     } else bestText = `YOUR DAILY BEST · ${prior} MOVES LEFT`;
   }
   $('best-line').textContent = bestText;
+  shareImagePromise = prepareResultImage({
+    game: 'Ten Questions Till Dawn', number: '002', won, mode, day: dayKey,
+    headline: won ? ['WE OUTTHOUGHT', 'IT'] : ['THE SHELTER', 'FELL'],
+    stats: [
+      { label: 'Asked', value: asked },
+      { label: 'Misses', value: misses },
+      { label: 'Moves left', value: points },
+    ],
+    url: `${location.origin}${location.pathname}`,
+  }).catch(() => null);
   setMessage(won ? 'We beat the rogue AI. The sun is coming up.' : 'The rogue AI broke through. I have another case ready.');
   render();
   // Let the sunrise or the breach play before the result card covers the board.
@@ -286,6 +298,7 @@ function finishRound() {
 
 function startRound(requestedMode) {
   mode = requestedMode;
+  shareImagePromise = null;
   round = createRound(mode === 'daily' ? dailyPuzzleIndex(dayKey) : randomPuzzleIndex(), mode);
   track('Game Started', { game: 'ten-questions', mode });
   selectedPart = null;
@@ -309,6 +322,7 @@ function startRound(requestedMode) {
 
 function returnHome() {
   round = null;
+  shareImagePromise = null;
   selectedPart = null;
   $('case-label').textContent = "TONIGHT'S CASE";
   document.querySelector('.target-kicker').textContent = "TONIGHT'S TARGET";
@@ -330,15 +344,13 @@ async function shareResult() {
   const text = shareText();
   const url = `${location.origin}${location.pathname}`;
   try {
-    if (navigator.share) {
-      await navigator.share({ title: 'Ten Questions Till Dawn', text, url });
-      track('Game Result Shared', { game: 'ten-questions', mode, method: 'native' });
-      return;
+    const method = await shareResultImage({ imagePromise: shareImagePromise, title: 'Ten Questions Till Dawn', text, url });
+    track('Game Result Shared', { game: 'ten-questions', mode, method });
+    if (method.startsWith('copy')) {
+      $('share-button').innerHTML = method === 'copy-image' ? 'CARD COPIED! <span>✓</span>' : 'TEXT COPIED! <span>✓</span>';
+      setMessage(method === 'copy-image' ? 'Paste your result card into a post.' : 'Paste your result and link into a post.');
+      setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
     }
-    await navigator.clipboard.writeText(`${text}\n${url}`);
-    track('Game Result Shared', { game: 'ten-questions', mode, method: 'copy' });
-    $('share-button').innerHTML = 'COPIED! <span>✓</span>';
-    setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
   } catch (error) {
     if (error?.name === 'AbortError') return;
     setMessage('Sharing is unavailable in this browser. Try copying the page link.');

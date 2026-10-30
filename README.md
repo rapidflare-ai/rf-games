@@ -37,7 +37,7 @@ The games and the About page are indexable. Each page has a canonical URL and id
 
 Host the games on their own subdomain or domain (the share tags assume `https://games.rapidflare.ai`), not under a path of the marketing site. If the address changes, update canonical and share URLs in the HTML pages, `robots.txt`, and `sitemap.xml`. The share images in `public/og/` are rendered from `og/card.html` with `scripts/og-images.sh` (needs Google Chrome).
 
-After a deployment, check that both `/og/circuit-siege.png` and `/og/ten-questions.png` return an image, then paste each game URL into a social preview checker such as LinkedIn Post Inspector. The result button opens the device's share sheet when available; otherwise it copies the result text and game URL. The social card shows the game's image, while the result text carries the player's score.
+After a deployment, check that both `/og/circuit-siege.png` and `/og/ten-questions.png` return an image, then paste each game URL into a social preview checker such as LinkedIn Post Inspector. The result button generates a personal PNG with the player's outcome and score. On devices that accept image files through the native share sheet, it shares that PNG with result text and the game URL. Other browsers use the native link share sheet, copy the image and text together, or copy the result text and URL, depending on their capabilities. The Open Graph image is a generic game preview for links pasted into social sites; a static site cannot make a unique social preview for each player's score.
 
 ## Optional Mixpanel analytics
 
