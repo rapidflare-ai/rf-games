@@ -2,6 +2,7 @@ import { askQuestion, CATEGORIES, consistentParts, createRound, dailyPuzzleIndex
 import { sfx } from '../audio.mjs';
 import { focusIsOnControl, keyBelongsToControl, setupSite } from '../site.mjs';
 import { ACTIVE_THEME, paintGhoul, THEMES } from '../themes.mjs';
+import { track } from '../analytics.mjs';
 
 const $ = (id) => document.getElementById(id);
 const overlay = $('screen-overlay');
@@ -246,6 +247,7 @@ function finishRound() {
   const asked = round.log.filter((entry) => entry.type === 'question').length;
   const misses = round.log.filter((entry) => entry.type === 'guess' && !entry.correct).length;
   const points = score(round);
+  track('Game Finished', { game: 'ten-questions', mode, won, moves_left: points, questions_asked: asked, wrong_guesses: misses });
   if (won) sfx.win(); else { sfx.breach(); setTimeout(sfx.lose, 300); }
   $('result-kicker').textContent = won ? 'DAWN BREAKS' : 'SIGNAL LOST';
   $('result-heading').textContent = won ? 'SHELTER SAFE' : `${ghoulName()} GOT IN`;
@@ -282,12 +284,13 @@ function finishRound() {
 function startRound(requestedMode) {
   mode = requestedMode;
   round = createRound(mode === 'daily' ? dailyPuzzleIndex(dayKey) : randomPuzzleIndex(), mode);
+  track('Game Started', { game: 'ten-questions', mode });
   selectedPart = null;
   const category = CATEGORIES[round.caseKey];
   $('case-label').textContent = `TONIGHT'S CASE · ${category.label}`;
-  $('case-brief').textContent = `${round.brief} Flare has picked the ${category.noun} for the job.`;
+  $('case-brief').textContent = round.brief;
   showCard(null);
-  setMessage(`${ghoulName()} is coming. Ask me about the ${category.noun}. I can only say yes or no.`);
+  setMessage(`Ask about the ${category.noun}. I can only say yes or no.`);
   sfx.select();
   render();
   $('question-list').querySelector('.question')?.focus({ preventScroll: true });
@@ -323,9 +326,11 @@ async function shareResult() {
   try {
     if (navigator.share) {
       await navigator.share({ title: 'Ten Questions Till Dawn', text, url });
+      track('Game Result Shared', { game: 'ten-questions', mode, method: 'native' });
       return;
     }
     await navigator.clipboard.writeText(`${text}\n${url}`);
+    track('Game Result Shared', { game: 'ten-questions', mode, method: 'copy' });
     $('share-button').innerHTML = 'COPIED! <span>✓</span>';
     setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
   } catch (error) {

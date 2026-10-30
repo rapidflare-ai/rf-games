@@ -2,6 +2,7 @@ import { CRAFTS, createGame, DIAGNOSTICS, installPart, launchCraft, LANE_COUNT, 
 import { sfx } from './audio.mjs';
 import { focusIsOnControl, keyBelongsToControl, setupSite } from './site.mjs';
 import { ACTIVE_THEME, paintGhoul, THEMES } from './themes.mjs';
+import { track } from './analytics.mjs';
 
 const $ = (id) => document.getElementById(id);
 const lanes = [...document.querySelectorAll('.lane')];
@@ -251,6 +252,7 @@ function startRound(requestedMode, seed) {
   mode = requestedMode;
   activeSeed = seed ?? (mode === 'daily' ? seedFromText(`circuit-siege-v3:${dayKey}`) : freshPracticeSeed());
   game = createGame(activeSeed, mode);
+  track('Game Started', { game: 'circuit-siege', mode });
   selectedLane = 0;
   lastHint = 0;
   lastStomp = 0;
@@ -258,7 +260,7 @@ function startRound(requestedMode, seed) {
   draggingPart = null;
   resetActors();
   showCard(null);
-  setMessage(`${DIAGNOSTICS[neededPart(game, 0)].hint} Choose a part or drag it onto a bay. My Auto-Fit can solve one step, three times per wave.`);
+  setMessage(`${DIAGNOSTICS[neededPart(game, 0)].hint} Fit a matching part. Auto-Fit ×3 if stuck.`);
   updateHud();
   sfx.select();
   lastFrame = performance.now();
@@ -299,6 +301,7 @@ function finishRound() {
   updateHud();
   const won = game.core > 0;
   const points = score(game);
+  track('Game Finished', { game: 'circuit-siege', mode, won, score: points, ghouls_stopped: game.kills });
   if (won) sfx.win(); else sfx.lose();
   $('result-kicker').textContent = won ? 'TRANSMISSION COMPLETE' : 'SIGNAL LOST';
   $('result-heading').textContent = won ? 'SHELTER SECURED' : 'SHELTER BREACHED';
@@ -348,9 +351,11 @@ async function shareResult() {
   try {
     if (navigator.share) {
       await navigator.share({ title: 'Circuit Siege', text, url });
+      track('Game Result Shared', { game: 'circuit-siege', mode, method: 'native' });
       return;
     }
     await navigator.clipboard.writeText(`${text}\n${url}`);
+    track('Game Result Shared', { game: 'circuit-siege', mode, method: 'copy' });
     $('share-button').innerHTML = 'COPIED! <span>✓</span>';
     setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
   } catch (error) {
@@ -398,6 +403,7 @@ function assistSelected() {
   if (!game || game.status !== 'running') return;
   if (paused) resumeRound({ focus: false, announce: false });
   const response = useAssist(game, selectedLane);
+  if (response.ok) track('Flare Auto Fit Used', { game: 'circuit-siege', mode });
   if (response.ok) sfx.good(); else sfx.bad();
   setMessage(response.ok
     ? response.ready ? `I auto-fitted the ${PARTS[response.part].name}. Craft ready to launch!` : `I auto-fitted the ${PARTS[response.part].name}. Next fault in this bay: ${DIAGNOSTICS[response.next].hint}`

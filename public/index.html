@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#141023">
-    <meta name="description" content="A just-for-fun daily arcade game. Help Flare repair friendly craft and launch them against a frontier AI's ghouls.">
-    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://games.rapidflare.ai/">
+    <meta name="author" content="Rapidflare">
+    <meta name="description" content="Play Haunted Circuit Siege, a daily electronics arcade game made by Rapidflare, the AI product intelligence team for electronics.">
     <meta property="og:site_name" content="Rapid Games">
     <meta property="og:title" content="Haunted Circuit Siege">
     <meta property="og:description" content="A just-for-fun Halloween arcade game from the Rapidflare team. Repair friendly craft with Flare and stop the ghouls.">
@@ -19,6 +20,7 @@
     <meta name="twitter:title" content="Haunted Circuit Siege">
     <meta name="twitter:description" content="A just-for-fun Halloween arcade game from the Rapidflare team.">
     <meta name="twitter:image" content="https://games.rapidflare.ai/og/circuit-siege.png">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Haunted Circuit Siege","url":"https://games.rapidflare.ai/","creator":{"@type":"Organization","name":"Rapidflare","url":"https://www.rapidflare.ai/"},"playMode":"SinglePlayer","applicationCategory":"Game"}</script>
     <title>Haunted Circuit Siege · Rapid Games</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/style.css">
@@ -80,7 +82,7 @@
                 <div class="tiny-kicker">INCOMING TRANSMISSION</div>
                 <div class="ai-avatar flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="wrench"></span><b>FLARE</b></div>
                 <h2 id="intro-heading">FLARE HAS A PLAN.<br><em>YOU HAVE THE PARTS.</em></h2>
-                <p class="intro-hint">New here? Press <kbd>?</kbd> for how to play.</p>
+                <p class="intro-hint">Choose a bay → fit its part → launch. <kbd>?</kbd> for help.</p>
                 <div class="intro-actions">
                   <button id="daily-start" class="primary-button" type="button" aria-keyshortcuts="D">PLAY TODAY'S WAVE <kbd aria-hidden="true">D</kbd></button>
                   <button id="practice-start" class="text-button" type="button" aria-keyshortcuts="R">PRACTICE RUN <kbd aria-hidden="true">R</kbd></button>
@@ -112,13 +114,13 @@
               <button type="button" class="part" data-part="power" draggable="true" aria-keyshortcuts="5"><span class="part-icon">ϟ</span><span>POWER<br>CELL</span><kbd aria-hidden="true">5</kbd></button>
             </div>
             <div class="launch-row"><button id="launch-button" class="launch-button" type="button" aria-keyshortcuts="L Space" disabled>REPAIR TO LAUNCH <span>→</span></button><span id="flare-message" class="flare-message" role="status">FLARE: Read the diagnostic and choose a component that solves it. I can help three times.</span></div>
-            <p class="quick-keys" aria-label="Quick keyboard guide"><span>LANES <kbd>Q</kbd><kbd>W</kbd><kbd>E</kbd></span><span>PARTS <kbd>1</kbd>–<kbd>5</kbd></span><span>LAUNCH <kbd>Space</kbd></span><span>AUTO-FIT <kbd>A</kbd></span><span>PAUSE <kbd>Esc</kbd></span></p>
+            <p class="quick-keys" aria-label="Three steps to play"><span><b>1</b> CHOOSE BAY</span><span><b>2</b> FIT PART</span><span><b>3</b> LAUNCH</span><button class="quick-help" type="button">HELP &amp; KEYS ?</button></p>
           </div>
         </section>
 
       </main>
 
-      <footer>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.<small class="disclaimer">A just-for-fun side project. The ghouls are parodies and are not affiliated with any AI company.</small></footer>
+      <footer><a class="footer-about" href="/about.html">About us</a><span aria-hidden="true"> · </span>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.<small class="disclaimer">A just-for-fun side project. The ghouls are parodies and are not affiliated with any AI company.</small></footer>
     </div>
 
     <dialog id="splash" class="splash" aria-labelledby="splash-title">
@@ -127,7 +129,7 @@
         <h2 id="splash-title" class="splash-title">HAUNTED<br><span>CIRCUIT SIEGE</span></h2>
         <p id="subtitle" class="subtitle">Frontier AI raised an army of ghouls. Flare is on our side.</p>
         <div class="splash-cast" aria-hidden="true"><span class="splash-flare"><span class="flare-icon" data-flare-tool="wrench"></span><b>FLARE</b></span><span class="versus">VS</span><div id="splash-ghouls" class="splash-ghouls"></div></div>
-        <p id="story" class="splash-story">Flare, a friendly AI, scans each craft for faults. Read the diagnostic, choose the component that solves it, and launch from the shelter to stop the ghouls.</p>
+        <p id="story" class="splash-story">Choose a bay. Fit the part that fixes its fault. Launch to stop the ghouls.</p>
         <div class="intro-actions">
           <button class="primary-button" type="button" data-action="daily" data-shortcut="d" aria-keyshortcuts="D" autofocus>PLAY TODAY'S WAVE <kbd aria-hidden="true">D</kbd></button>
           <button class="text-button" type="button" data-action="practice" data-shortcut="r" aria-keyshortcuts="R">PRACTICE RUN <kbd aria-hidden="true">R</kbd></button>
@@ -142,7 +144,7 @@
 
     <dialog id="help-panel" class="help-panel" aria-labelledby="help-title">
       <div class="help-head"><h2 id="help-title">HOW TO PLAY</h2><button type="button" class="help-close" data-action="close" aria-label="Close help"><span aria-hidden="true">✕</span> <kbd aria-hidden="true">Esc</kbd></button></div>
-      <p>Pick a craft bay and read its fault. Tap a component or drag it directly onto the bay, then launch from the shelter. Selecting a bay does not change its fault. A correct fit advances the fighter to its second fault; launching gives the bay a new fault. Wrong fits cost points. Flare Auto-Fit solves one fault per use, three times per wave. Pause with the visible button to inspect the board; fitting or launching resumes play. Opening this panel also pauses the game.</p>
+      <ol class="help-steps"><li><strong>Choose a bay</strong> and read its fault.</li><li><strong>Fit a part</strong> by tapping it or dragging it onto a bay. The fighter needs two repairs.</li><li><strong>Launch</strong> the ready craft. The bay gets a new fault.</li></ol><p>Wrong parts cost points. Flare can auto-fit three parts per wave. Pause to plan; fitting or launching resumes play.</p>
       <p class="help-note"><strong>One wave, every day.</strong> The daily wave is the same worldwide until midnight UTC. Practice runs are unlimited. No account needed.</p>
       <h3 class="micro-label">KEYBOARD</h3>
       <dl class="key-list">

@@ -9,6 +9,7 @@ on:
       - public/**
       - vercel.json
       - scripts/deploy.sh
+      - scripts/write-analytics-config.mjs
       - .github/workflows/deploy.yml
   pull_request:
     types: [opened, reopened, synchronize]
@@ -16,6 +17,7 @@ on:
       - public/**
       - vercel.json
       - scripts/deploy.sh
+      - scripts/write-analytics-config.mjs
       - .github/workflows/deploy.yml
   workflow_dispatch:
 
@@ -57,6 +59,11 @@ jobs:
 
       - name: Install Vercel CLI
         run: npm install --global vercel@59.1.4
+
+      - name: Configure optional game analytics
+        env:
+          MIXPANEL_TOKEN: ${{ vars.MIXPANEL_TOKEN }}
+        run: node scripts/write-analytics-config.mjs
 
       - name: Deploy static site
         env:

@@ -2,19 +2,25 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
 
-const PAGES = ['public/index.html', 'public/ten-questions/index.html', 'public/updates.html'];
+const PAGES = ['public/index.html', 'public/ten-questions/index.html', 'public/updates.html', 'public/about.html'];
 const GAME_PAGES = { 'public/index.html': 'circuit-siege', 'public/ten-questions/index.html': 'ten-questions' };
 
-test('every page asks search engines not to index it and carries the parody disclaimer', () => {
+test('every page is indexable, names Rapidflare, and carries the parody disclaimer', () => {
   for (const page of PAGES) {
     const html = readFileSync(page, 'utf8');
-    assert.match(html, /<meta name="robots" content="noindex">/, `${page} is noindex`);
+    assert.doesNotMatch(html, /noindex/, `${page} is indexable`);
+    assert.match(html, /<link rel="canonical" href="https:\/\/games\.rapidflare\.ai\//, `${page} has a canonical URL`);
+    assert.match(html, /Rapidflare/, `${page} names the maker`);
     assert.match(html, /not affiliated with any AI company/, `${page} has the disclaimer`);
   }
   const vercel = JSON.parse(readFileSync('vercel.json', 'utf8'));
   const header = vercel.headers?.flatMap((rule) => rule.headers).find((item) => item.key === 'X-Robots-Tag');
-  assert.equal(header?.value, 'noindex');
-  assert.ok(!existsSync('public/robots.txt'), 'no robots.txt block, so crawlers can see the noindex');
+  assert.notEqual(header?.value, 'noindex');
+  assert.match(readFileSync('public/robots.txt', 'utf8'), /Sitemap: https:\/\/games\.rapidflare\.ai\/sitemap\.xml/);
+  const sitemap = readFileSync('public/sitemap.xml', 'utf8');
+  for (const url of ['/', '/ten-questions/', '/updates', '/about']) {
+    assert.ok(sitemap.includes(`<loc>https://games.rapidflare.ai${url}</loc>`));
+  }
 });
 
 test('game pages have share cards that point at real images', () => {

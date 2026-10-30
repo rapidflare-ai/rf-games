@@ -4,8 +4,9 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="#141023">
-    <meta name="description" content="A just-for-fun daily deduction game. A ghoul creeps closer with every question. Work out which part Flare needs before it reaches the shelter.">
-    <meta name="robots" content="noindex">
+    <link rel="canonical" href="https://games.rapidflare.ai/ten-questions/">
+    <meta name="author" content="Rapidflare">
+    <meta name="description" content="Play Ten Questions Till Dawn, a daily electronics deduction game made by Rapidflare, the AI product intelligence team for electronics.">
     <meta property="og:site_name" content="Rapid Games">
     <meta property="og:title" content="Ten Questions Till Dawn">
     <meta property="og:description" content="A just-for-fun Halloween deduction game from the Rapidflare team. Ten moves, one part, a ghoul at the gate.">
@@ -19,6 +20,7 @@
     <meta name="twitter:title" content="Ten Questions Till Dawn">
     <meta name="twitter:description" content="A just-for-fun Halloween deduction game from the Rapidflare team.">
     <meta name="twitter:image" content="https://games.rapidflare.ai/og/ten-questions.png">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Ten Questions Till Dawn","url":"https://games.rapidflare.ai/ten-questions/","creator":{"@type":"Organization","name":"Rapidflare","url":"https://www.rapidflare.ai/"},"playMode":"SinglePlayer","applicationCategory":"Game"}</script>
     <title>Ten Questions Till Dawn · Rapid Games</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="/style.css">
@@ -72,7 +74,7 @@
               <div class="tiny-kicker">INCOMING TRANSMISSION</div>
               <div class="ai-avatar flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="question"></span><b>FLARE</b></div>
               <h2>I KNOW THE PART.<br><em>CAN YOU NAME IT?</em></h2>
-              <p class="intro-hint">New here? Press <kbd>?</kbd> for how to play.</p>
+              <p class="intro-hint">Ask → rule out → name the part. <kbd>?</kbd> for help.</p>
               <div class="intro-actions">
                 <button id="daily-start" class="primary-button" type="button" aria-keyshortcuts="D">PLAY TODAY'S CASE <kbd aria-hidden="true">D</kbd></button>
                 <button id="practice-start" class="text-button" type="button" aria-keyshortcuts="R">PRACTICE CASE <kbd aria-hidden="true">R</kbd></button>
@@ -96,10 +98,12 @@
           <div class="control-panel">
             <div class="panel-title"><span class="flare-face flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="question"></span><small>FLARE</small></span><span><span id="case-label">TONIGHT'S CASE</span><small id="case-brief" class="selected-bay case-brief">Start a case to hear Flare's brief.</small></span></div>
 
+            <p class="quick-keys" aria-label="Three steps to play"><span><b>1</b> ASK</span><span><b>2</b> RULE OUT</span><span><b>3</b> NAME IT</span><button class="quick-help" type="button">HELP &amp; KEYS ?</button></p>
+
             <div class="parts-title"><h2 class="panel-heading">ASK FLARE</h2><span>EACH QUESTION = 1 STEP</span></div>
             <div id="question-list" class="question-list" role="group" aria-label="Questions"></div>
 
-            <div class="parts-title"><h2 class="panel-heading">SUSPECT PARTS</h2><span>SELECT · <kbd aria-hidden="true">X</kbd> CROSS OUT · <kbd aria-hidden="true">N</kbd> NAME IT</span></div>
+            <div class="parts-title"><h2 class="panel-heading">SUSPECT PARTS</h2><span>TAP A PART, THEN NAME IT</span></div>
             <div id="suspect-list" class="suspect-list" role="group" aria-label="Suspect parts"></div>
 
             <div class="launch-row"><button id="guess-button" class="launch-button" type="button" aria-keyshortcuts="N" disabled>SELECT A PART <span>→</span></button><span id="flare-message" class="flare-message" role="status">FLARE: Ask me about the part. I can only say yes or no.</span></div>
@@ -108,7 +112,7 @@
 
       </main>
 
-      <footer>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.<small class="disclaimer">A just-for-fun side project. The ghouls are parodies and are not affiliated with any AI company.</small></footer>
+      <footer><a class="footer-about" href="/about.html">About us</a><span aria-hidden="true"> · </span>Designed for fun by <a href="https://www.rapidflare.ai/" target="_blank" rel="noopener noreferrer">Rapidflare <span aria-hidden="true">↗</span></a>. No AI was harmed in the making of this game.<small class="disclaimer">A just-for-fun side project. The ghouls are parodies and are not affiliated with any AI company.</small></footer>
     </div>
 
     <dialog id="splash" class="splash" aria-labelledby="splash-title">
@@ -117,7 +121,7 @@
         <h2 id="splash-title" class="splash-title">TEN QUESTIONS<br><span>TILL DAWN</span></h2>
         <p class="subtitle">A ghoul is creeping toward the shelter. Flare knows which part will stop it.</p>
         <div class="splash-cast" aria-hidden="true"><span class="splash-flare"><span class="flare-icon" data-flare-tool="question"></span><b>FLARE</b></span><span class="versus">VS</span><div id="splash-ghouls" class="splash-ghouls"></div></div>
-        <p class="splash-story">Ask Flare yes-or-no questions, cross out the parts that don't fit, and name the right one. Each question lets the ghoul creep one step closer; a wrong guess costs three. You have ten moves till dawn.</p>
+        <p class="splash-story">Ask Flare. Rule out parts. Name the right one before the ghoul reaches you.</p>
         <div class="intro-actions">
           <button class="primary-button" type="button" data-action="daily" data-shortcut="d" aria-keyshortcuts="D" autofocus>PLAY TODAY'S CASE <kbd aria-hidden="true">D</kbd></button>
           <button class="text-button" type="button" data-action="practice" data-shortcut="r" aria-keyshortcuts="R">PRACTICE CASE <kbd aria-hidden="true">R</kbd></button>
@@ -132,7 +136,7 @@
 
     <dialog id="help-panel" class="help-panel" aria-labelledby="help-title">
       <div class="help-head"><h2 id="help-title">HOW TO PLAY</h2><button type="button" class="help-close" data-action="close" aria-label="Close help"><span aria-hidden="true">✕</span> <kbd aria-hidden="true">Esc</kbd></button></div>
-      <p>Flare has secretly picked one part. Each yes-or-no question moves the ghoul a step closer; a wrong guess moves it three. Read each part's spec line, cross out the ones that don't fit, and name the right one before the ghoul reaches the shelter.</p>
+      <ol class="help-steps"><li><strong>Ask Flare</strong> a yes-or-no question.</li><li><strong>Rule out parts</strong> that do not fit.</li><li><strong>Name the part</strong> before the ghoul arrives.</li></ol><p>You have ten moves. Each question costs one; a wrong guess costs three.</p>
       <p class="help-note"><strong>One case, every day.</strong> A hundred cases rotate through the year, the same worldwide until midnight UTC. Practice cases are unlimited. No account needed.</p>
       <h3 class="micro-label">KEYBOARD</h3>
       <dl class="key-list">
