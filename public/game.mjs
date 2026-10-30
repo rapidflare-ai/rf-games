@@ -388,12 +388,25 @@ async function shareResult() {
     track('Game Result Shared', { game: 'circuit-siege', mode, method });
     if (method.startsWith('copy')) {
       $('share-button').innerHTML = method === 'copy-image' ? 'CARD COPIED! <span>✓</span>' : 'TEXT COPIED! <span>✓</span>';
-      setMessage(method === 'copy-image' ? 'Paste your result card into a post.' : 'Paste your result and link into a post.');
+      setMessage(method === 'copy-image' ? 'Paste the image into your post, then use Copy Post Text for the caption and link.' : 'Paste your result and link into a post.');
       setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
     }
   } catch (error) {
     if (error?.name === 'AbortError') return;
     setMessage('Sharing is unavailable in this browser. Try copying the page link.');
+  }
+}
+
+async function copyPostText() {
+  if (!game || game.status !== 'finished') return;
+  try {
+    await navigator.clipboard.writeText(`${shareText()}\n${location.origin}${location.pathname}`);
+    track('Game Result Shared', { game: 'circuit-siege', mode, method: 'copy-post-text' });
+    $('copy-post-button').innerHTML = 'POST TEXT COPIED! <span>✓</span>';
+    setMessage('Paste this as the caption for your result image.');
+    setTimeout(() => { $('copy-post-button').innerHTML = 'COPY POST TEXT <kbd aria-hidden="true">C</kbd>'; }, 1800);
+  } catch {
+    setMessage('Could not copy the post text. Try again or copy the page link.');
   }
 }
 
@@ -505,7 +518,13 @@ $('quit-button').addEventListener('click', returnHome);
 
 const PART_KEYS = { 1: 'gps', 2: 'sensor', 3: 'pcie', 4: 'jammer', 5: 'power', 6: 'radio', 7: 'thermal', 8: 'regulator' };
 const LANE_KEYS = { q: 0, w: 1, e: 2 };
+let pointerPlaying = false;
+document.addEventListener('pointerdown', (event) => {
+  pointerPlaying = Boolean(event.target.closest('#game-cabinet'));
+});
 document.addEventListener('keydown', (event) => {
+  // Tab returns Space to native button activation for keyboard navigation.
+  if (event.key === 'Tab') pointerPlaying = false;
   if (keyBelongsToControl(event)) return;
   const key = event.key.toLowerCase();
   const visible = (name) => !cards[name].classList.contains('hidden') && !overlay.classList.contains('hidden');
@@ -517,6 +536,7 @@ document.addEventListener('keydown', (event) => {
   if (visible('result')) {
     if (key === 'r') { event.preventDefault(); startRound(mode, activeSeed); }
     if (key === 's') { event.preventDefault(); shareResult(); }
+    if (key === 'c') { event.preventDefault(); copyPostText(); }
     if (key === 'escape') { event.preventDefault(); returnHome(); }
     return;
   }
@@ -530,6 +550,7 @@ document.addEventListener('keydown', (event) => {
   } else if (PART_KEYS[key]) { event.preventDefault(); installSelected(PART_KEYS[key]); }
   else if (key === 'a') { event.preventDefault(); assistSelected(); }
   else if (key === 'l') { event.preventDefault(); launchSelected(); }
+  else if (key === ' ' && pointerPlaying) { event.preventDefault(); launchSelected(); }
   else if ((key === ' ' || key === 'enter') && !focusIsOnControl()) { event.preventDefault(); launchSelected(); }
   else if (key === ' ' && document.activeElement?.classList.contains('lane') && Number(document.activeElement.dataset.lane) === selectedLane) {
     // Space on the already selected lane launches, like a second tap.
@@ -543,6 +564,7 @@ $('practice-start').addEventListener('click', () => startRound('practice'));
 $('retry-button').addEventListener('click', () => startRound(mode, activeSeed));
 $('home-button').addEventListener('click', returnHome);
 $('share-button').addEventListener('click', shareResult);
+$('copy-post-button').addEventListener('click', copyPostText);
 setupSite('circuit-siege', {
   onAction: (action) => startRound(action === 'daily' ? 'daily' : 'practice'),
   onHelpOpen: pauseRound,

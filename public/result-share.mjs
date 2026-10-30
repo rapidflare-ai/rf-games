@@ -86,6 +86,21 @@ export async function shareResultImage({ imagePromise, title, text, url }) {
   let canShareFile = false;
   try { canShareFile = Boolean(file && navigator.share && navigator.canShare?.({ files: [file] })); }
   catch { /* Some browsers reject file capability checks. */ }
+  // macOS's share-sheet Copy action does not reliably paste a photo into a web
+  // post. A direct PNG clipboard write is the clearer desktop path.
+  const desktopPointer = globalThis.matchMedia?.('(pointer: fine)').matches ?? false;
+  if (canShareFile && !desktopPointer) {
+    await navigator.share({ title, text, url, files: [file] });
+    return 'native-image';
+  }
+  if (file && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({
+        'image/png': file,
+      })]);
+      return 'copy-image';
+    } catch { /* Some browsers can only use the native share sheet or copy text. */ }
+  }
   if (canShareFile) {
     await navigator.share({ title, text, url, files: [file] });
     return 'native-image';
@@ -93,15 +108,6 @@ export async function shareResultImage({ imagePromise, title, text, url }) {
   if (navigator.share) {
     await navigator.share({ title, text, url });
     return 'native-link';
-  }
-  if (file && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
-    try {
-      await navigator.clipboard.write([new ClipboardItem({
-        'image/png': file,
-        'text/plain': new Blob([`${text}\n${url}`], { type: 'text/plain' }),
-      })]);
-      return 'copy-image';
-    } catch { /* Some browsers can only copy text. */ }
   }
   await navigator.clipboard.writeText(`${text}\n${url}`);
   return 'copy-text';
