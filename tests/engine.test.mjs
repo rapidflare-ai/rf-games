@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createGame, DIAGNOSTICS, ENEMIES, installPart, launchCraft, makeScenario, neededPart, score, seedFromText, tick, urgentLane, useAssist, utcDayKey } from '../public/engine.mjs';
+import { createGame, DIAGNOSTICS, ENEMIES, installPart, launchCraft, makeScenario, neededPart, PARTS, score, seedFromText, tick, urgentLane, useAssist, utcDayKey, WRONG_FIT_LOCK_SECONDS, WRONG_FIT_SCORE_PENALTY } from '../public/engine.mjs';
 import { ACTIVE_THEME, THEMES } from '../public/themes.mjs';
 
 test('daily seeds and waves are stable across clients', () => {
@@ -50,12 +50,47 @@ test('a craft accepts its requested part and changes needs after launch', () => 
   assert.equal(wrong.ok, false);
   assert.doesNotMatch(wrong.reason, /gps|antenna/i);
   assert.equal(game.mistakes, 1);
+  assert.equal(wrong.penalty, WRONG_FIT_SCORE_PENALTY);
+  assert.equal(installPart(game, 0, 'gps').locked, true);
+  for (let step = 0; step < 14; step += 1) tick(game, 0.12);
   assert.equal(installPart(game, 0, 'gps').ready, true);
   assert.equal(launchCraft(game, 0).ok, true);
   assert.equal(game.launches, 1);
   assert.equal(game.shots[0].kind, 'drone');
   assert.equal(game.bays[0].cycle, 1);
-  assert.ok(['gps', 'sensor', 'power'].includes(neededPart(game, 0)));
+  assert.ok(['gps', 'sensor', 'thermal', 'radio'].includes(neededPart(game, 0)));
+});
+
+test('all eight distinct fault shapes can appear during daily play', () => {
+  const seen = new Set();
+  for (let seed = 1; seed <= 12; seed += 1) {
+    const game = createGame(seed);
+    for (let lane = 0; lane < 3; lane += 1) {
+      for (let cycle = 0; cycle < 16; cycle += 1) {
+        while (!game.bays[lane].ready) {
+          const part = neededPart(game, lane);
+          seen.add(part);
+          installPart(game, lane, part);
+        }
+        launchCraft(game, lane);
+      }
+    }
+  }
+  assert.deepEqual(seen, new Set(Object.keys(PARTS)));
+  assert.deepEqual(new Set(Object.keys(DIAGNOSTICS)), seen);
+});
+
+test('wrong fits cost time and score, and rapid scanning cannot retry during recalibration', () => {
+  const game = createGame(9);
+  const baseline = score(game);
+  const wrong = installPart(game, 0, 'sensor');
+  assert.equal(wrong.lockSeconds, WRONG_FIT_LOCK_SECONDS);
+  assert.equal(score(game), baseline - WRONG_FIT_SCORE_PENALTY);
+  for (const part of Object.keys(PARTS)) assert.equal(installPart(game, 0, part).locked, true);
+  assert.equal(useAssist(game, 0).ok, false);
+  assert.equal(game.mistakes, 1);
+  for (let step = 0; step < 14; step += 1) tick(game, 0.12);
+  assert.equal(installPart(game, 0, 'gps').ready, true);
 });
 
 test('fighter needs a PCIe upgrade before its jammer', () => {

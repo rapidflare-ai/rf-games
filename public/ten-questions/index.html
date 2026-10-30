@@ -23,8 +23,8 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Ten Questions Till Dawn","url":"https://games.rapidflare.ai/ten-questions/","creator":{"@type":"Organization","name":"Rapidflare","url":"https://www.rapidflare.ai/"},"playMode":"SinglePlayer","applicationCategory":"Game"}</script>
     <title>Ten Questions Till Dawn · Rapid Games</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/style.css">
-    <link rel="stylesheet" href="/ten-questions/style.css">
+    <link rel="stylesheet" href="/style.css?v=20261030-visual-ui-3">
+    <link rel="stylesheet" href="/ten-questions/style.css?v=20261030-visual-ui-3">
     <script type="module" src="/ten-questions/game.mjs"></script>
   </head>
   <body data-theme="halloween">
@@ -96,7 +96,7 @@
           </div>
 
           <div class="control-panel">
-            <div class="panel-title"><span class="flare-face flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="question"></span><small>FLARE</small></span><span><span id="case-label">TONIGHT'S CASE</span><small id="case-brief" class="selected-bay case-brief">Start a case to hear Flare's brief.</small></span></div>
+            <div class="panel-title tq-panel-title"><span class="flare-face flare-avatar" aria-hidden="true"><span class="flare-icon" data-flare-tool="question"></span><small>FLARE</small></span><span id="target-card" class="target-card"><span class="target-kicker">WHAT ARE WE FINDING?</span><strong id="case-label">FIND A PART</strong><small id="case-brief" class="case-brief">Start a case to reveal what kind of part you need.</small></span><span id="flare-message" class="flare-message flare-bubble" role="status">Ask a question to narrow the parts.</span></div>
 
             <p class="quick-keys" aria-label="Three steps to play"><span><b>1</b> ASK</span><span><b>2</b> RULE OUT</span><span><b>3</b> NAME IT</span><button class="quick-help" type="button">HELP &amp; KEYS ?</button></p>
 
@@ -106,7 +106,7 @@
             <div class="parts-title"><h2 class="panel-heading">SUSPECT PARTS</h2><span>TAP A PART, THEN NAME IT</span></div>
             <div id="suspect-list" class="suspect-list" role="group" aria-label="Suspect parts"></div>
 
-            <div class="launch-row"><button id="guess-button" class="launch-button" type="button" aria-keyshortcuts="N" disabled>SELECT A PART <span>→</span></button><span id="flare-message" class="flare-message" role="status">FLARE: Ask me about the part. I can only say yes or no.</span></div>
+            <div class="launch-row"><button id="guess-button" class="launch-button" type="button" aria-keyshortcuts="N" disabled>SELECT A PART <span>→</span></button></div>
           </div>
         </section>
 

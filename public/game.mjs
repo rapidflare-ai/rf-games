@@ -1,4 +1,5 @@
 import { CRAFTS, createGame, DIAGNOSTICS, installPart, launchCraft, LANE_COUNT, neededPart, PARTS, score, seedFromText, tick, urgentLane, useAssist, utcDayKey } from './engine.mjs';
+import { partArt } from './parts-art.mjs';
 import { sfx } from './audio.mjs';
 import { focusIsOnControl, keyBelongsToControl, setupSite } from './site.mjs';
 import { ACTIVE_THEME, paintGhoul, THEMES } from './themes.mjs';
@@ -100,7 +101,13 @@ function setHtml(node, html) {
 }
 
 function setMessage(message) {
-  $('flare-message').textContent = `FLARE: ${message}`;
+  $('flare-message').textContent = message;
+}
+
+function paintPart(node, part) {
+  if (node.dataset.part === part) return;
+  node.dataset.part = part ?? '';
+  node.innerHTML = part ? partArt(part) : '<span class="ready-mark">✓</span>';
 }
 
 function updateHud() {
@@ -124,7 +131,8 @@ function updateHud() {
     const nearest = game?.bots.filter((bot) => bot.lane === lane).sort((a, b) => a.x - b.x)[0];
     const threat = nearest ? `. ${THEMES[themeName].enemy[nearest.kind]} ${nearest.x < 0.4 ? 'close to the shelter' : 'approaching'}` : '';
     const progress = bay?.installed && !bay.ready ? `${bay.installed}/${bay.queue.length} · ` : '';
-    requirement.textContent = bay?.ready ? 'READY · TAP TO LAUNCH' : `${progress}${DIAGNOSTICS[needed].label}`;
+    paintPart(requirement.querySelector('.fault-icon'), bay?.ready ? null : needed);
+    requirement.querySelector('.fault-label').textContent = bay?.ready ? 'READY · TAP TO LAUNCH' : `${progress}${DIAGNOSTICS[needed].label}`;
     card.classList.toggle('ready', Boolean(bay?.ready));
     lanes[lane].classList.toggle('selected', selectedLane === lane);
     lanes[lane].setAttribute('aria-pressed', String(selectedLane === lane));
@@ -135,12 +143,18 @@ function updateHud() {
 
   const selectedBay = game?.bays[selectedLane];
   const needed = selectedBay ? neededPart(game, selectedLane) : ['gps', 'pcie', 'power'][selectedLane];
+  paintPart($('selected-fault-icon'), selectedBay?.ready ? null : needed);
   $('selected-bay').textContent = selectedBay?.ready
     ? `${CRAFTS[selectedLane].name.toUpperCase()} · READY TO LAUNCH`
     : `${CRAFTS[selectedLane].name.toUpperCase()} · ${selectedBay?.installed ? `${selectedBay.installed}/${selectedBay.queue.length} · ` : ''}${DIAGNOSTICS[needed].label}`;
-  setHtml($('assist-button'), `FLARE AUTO-FIT ×${game?.assists ?? 3} <kbd aria-hidden="true">A</kbd>`);
+  setHtml($('assist-button'), `AUTO-FIT ×${game?.assists ?? 3} <kbd aria-hidden="true">A</kbd>`);
   $('assist-button').setAttribute('aria-label', `Flare auto-fits one correct part in the selected bay. ${game?.assists ?? 3} uses left.`);
-  $('assist-button').disabled = !running || game.assists === 0 || Boolean(selectedBay?.ready);
+  $('assist-button').disabled = !running || game.assists === 0 || Boolean(selectedBay?.ready) || game.repairLock > 0;
+  for (const button of parts) {
+    const locked = Boolean(running && game.repairLock > 0);
+    button.classList.toggle('locked', locked);
+    button.setAttribute('aria-disabled', String(locked));
+  }
   $('launch-button').disabled = !running || !selectedBay?.ready;
   setHtml($('launch-button'), selectedBay?.ready
     ? `LAUNCH ${CRAFTS[selectedLane].name.toUpperCase()} <kbd aria-hidden="true">Space</kbd>`
@@ -249,6 +263,7 @@ function resetActors() {
 
 function startRound(requestedMode, seed) {
   cancelAnimationFrame(frame);
+  cards.result.classList.remove('won', 'lost');
   mode = requestedMode;
   activeSeed = seed ?? (mode === 'daily' ? seedFromText(`circuit-siege-v3:${dayKey}`) : freshPracticeSeed());
   game = createGame(activeSeed, mode);
@@ -260,7 +275,7 @@ function startRound(requestedMode, seed) {
   draggingPart = null;
   resetActors();
   showCard(null);
-  setMessage(`${DIAGNOSTICS[neededPart(game, 0)].hint} Fit a matching part. Auto-Fit ×3 if stuck.`);
+  setMessage('Match the glowing fault shape to a part, then launch. Auto-Fit ×3 if stuck.');
   updateHud();
   sfx.select();
   lastFrame = performance.now();
@@ -303,16 +318,20 @@ function finishRound() {
   const points = score(game);
   track('Game Finished', { game: 'circuit-siege', mode, won, score: points, ghouls_stopped: game.kills });
   if (won) sfx.win(); else sfx.lose();
-  $('result-kicker').textContent = won ? 'TRANSMISSION COMPLETE' : 'SIGNAL LOST';
-  $('result-heading').textContent = won ? 'SHELTER SECURED' : 'SHELTER BREACHED';
-  $('result-story').textContent = won ? THEMES[themeName].victory : THEMES[themeName].defeat;
+  cards.result.classList.toggle('won', won);
+  cards.result.classList.toggle('lost', !won);
+  $('result-kicker').textContent = won ? 'THE ROGUE AI IS DOWN' : 'THE ROGUE AI BROKE THROUGH';
+  $('result-heading').textContent = won ? 'WE HELD THE LINE' : 'THE SHELTER FELL';
+  $('result-story').textContent = won
+    ? `We outsmarted the rogue AI. ${THEMES[themeName].victory}`
+    : `The rogue AI overwhelmed our defenses. ${THEMES[themeName].defeat}`;
   $('result-kills').textContent = `${game.kills}/${game.wave.length}`;
   $('result-core').textContent = `${'♥ '.repeat(game.core)}${'♡ '.repeat(3 - game.core)}`.trim();
   $('result-score').textContent = String(points).padStart(4, '0');
   let bestText = mode === 'daily' ? 'Daily wave · UTC' : 'Practice run';
   if (mode === 'daily') {
-    // The v4 key starts a fresh local best after removing launch-count points.
-    const key = `rf-games-best-v4:${dayKey}`;
+    // The v5 key starts a fresh local best after changing the wrong-fit penalty.
+    const key = `rf-games-best-v5:${dayKey}`;
     const prior = Number(readStorage(key) || 0);
     if (points > prior) {
       writeStorage(key, String(points));
@@ -332,7 +351,7 @@ function returnHome() {
   selectedLane = 0;
   resetActors();
   showCard('intro');
-  setMessage('Select a bay, solve its diagnostic, and launch. My Auto-Fit can solve one step, three times per wave.');
+  setMessage('Match the glowing fault shape to a part, then launch. Auto-Fit can help three times.');
   updateHud();
   $('daily-start').focus();
 }
@@ -383,8 +402,9 @@ function installSelected(part) {
       ? `${CRAFTS[selectedLane].name} repaired. Press Space to launch!`
       : `${PARTS[part].name} fitted. Next fault in this bay: ${DIAGNOSTICS[response.next].hint}`);
   } else {
-    sfx.bad();
-    setMessage(`${response.reason}.`);
+    if (!response.locked) sfx.bad();
+    if (response.penalty) setMessage(`Wrong fit! −${response.penalty} points. Repairs locked for ${response.lockSeconds} seconds.`);
+    else if (!response.locked) setMessage(`${response.reason}.`);
   }
   updateHud();
 }
@@ -425,7 +445,10 @@ for (const button of lanes) button.addEventListener('click', () => {
   if (selectedLane === lane && game.bays[lane].ready) launchSelected();
   else selectLane(lane);
 });
-for (const button of parts) button.addEventListener('click', () => installSelected(button.dataset.part));
+for (const button of parts) {
+  paintPart(button.querySelector('.part-icon'), button.dataset.part);
+  button.addEventListener('click', () => installSelected(button.dataset.part));
+}
 function clearDrag() {
   draggingPart = null;
   for (const button of parts) button.classList.remove('dragging');
@@ -433,7 +456,7 @@ function clearDrag() {
 }
 for (const button of parts) {
   button.addEventListener('dragstart', (event) => {
-    if (!game || game.status !== 'running') { event.preventDefault(); return; }
+    if (!game || game.status !== 'running' || game.repairLock > 0) { event.preventDefault(); return; }
     draggingPart = button.dataset.part;
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', draggingPart);
@@ -466,7 +489,7 @@ $('pause-button').addEventListener('click', () => { if (paused) resumeRound(); e
 $('resume-button').addEventListener('click', () => resumeRound());
 $('quit-button').addEventListener('click', returnHome);
 
-const PART_KEYS = { 1: 'gps', 2: 'sensor', 3: 'pcie', 4: 'jammer', 5: 'power' };
+const PART_KEYS = { 1: 'gps', 2: 'sensor', 3: 'pcie', 4: 'jammer', 5: 'power', 6: 'radio', 7: 'thermal', 8: 'regulator' };
 const LANE_KEYS = { q: 0, w: 1, e: 2 };
 document.addEventListener('keydown', (event) => {
   if (keyBelongsToControl(event)) return;

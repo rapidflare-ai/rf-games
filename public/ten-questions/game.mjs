@@ -29,7 +29,7 @@ function prettyDay(key) {
 }
 
 function setMessage(message) {
-  $('flare-message').textContent = `FLARE: ${message}`;
+  $('flare-message').textContent = message;
 }
 
 // Show one overlay card (or none) and keep the controls behind it out of the tab order.
@@ -249,11 +249,13 @@ function finishRound() {
   const points = score(round);
   track('Game Finished', { game: 'ten-questions', mode, won, moves_left: points, questions_asked: asked, wrong_guesses: misses });
   if (won) sfx.win(); else { sfx.breach(); setTimeout(sfx.lose, 300); }
-  $('result-kicker').textContent = won ? 'DAWN BREAKS' : 'SIGNAL LOST';
-  $('result-heading').textContent = won ? 'SHELTER SAFE' : `${ghoulName()} GOT IN`;
+  cards.result.classList.toggle('won', won);
+  cards.result.classList.toggle('lost', !won);
+  $('result-kicker').textContent = won ? 'ROGUE AI OUTSMARTED' : 'THE ROGUE AI BROKE THROUGH';
+  $('result-heading').textContent = won ? 'WE OUTTHOUGHT IT' : 'THE SHELTER FELL';
   $('result-story').textContent = won
-    ? `It was the ${answer.name}. Flare wired it up and ${ghoulName()} fled at first light.`
-    : `It was the ${answer.name}. ${consistentParts(round).length === 1 ? 'Your answers had already narrowed it down to that.' : 'One more question might have cracked it.'}`;
+    ? `We found the ${answer.name}, and Flare sent ${ghoulName()} running at first light.`
+    : `${ghoulName()} slipped past us. The missing part was ${answer.name}.${consistentParts(round).length === 1 ? ' Your answers had already narrowed it down.' : ' One more question might have cracked it.'}`;
   $('result-asked').textContent = String(asked);
   $('result-misses').textContent = String(misses);
   $('result-score').textContent = String(points);
@@ -270,7 +272,7 @@ function finishRound() {
     } else bestText = `YOUR DAILY BEST · ${prior} MOVES LEFT`;
   }
   $('best-line').textContent = bestText;
-  setMessage(won ? 'We did it. The sun is coming up.' : `${ghoulName()} broke through. I have another case ready.`);
+  setMessage(won ? 'We beat the rogue AI. The sun is coming up.' : 'The rogue AI broke through. I have another case ready.');
   render();
   // Let the sunrise or the breach play before the result card covers the board.
   const reveal = () => {
@@ -286,11 +288,13 @@ function startRound(requestedMode) {
   round = createRound(mode === 'daily' ? dailyPuzzleIndex(dayKey) : randomPuzzleIndex(), mode);
   track('Game Started', { game: 'ten-questions', mode });
   selectedPart = null;
+  cards.result.classList.remove('won', 'lost');
   const category = CATEGORIES[round.caseKey];
-  $('case-label').textContent = `TONIGHT'S CASE · ${category.label}`;
+  document.querySelector('.target-kicker').textContent = 'WHAT ARE WE FINDING?';
+  $('case-label').textContent = category.label;
   $('case-brief').textContent = round.brief;
   showCard(null);
-  setMessage(`Ask about the ${category.noun}. I can only say yes or no.`);
+  setMessage('Ask a question to narrow the parts.');
   sfx.select();
   render();
   $('question-list').querySelector('.question')?.focus({ preventScroll: true });
@@ -306,6 +310,7 @@ function returnHome() {
   round = null;
   selectedPart = null;
   $('case-label').textContent = "TONIGHT'S CASE";
+  document.querySelector('.target-kicker').textContent = "TONIGHT'S TARGET";
   $('case-brief').textContent = "Start a case to hear Flare's brief.";
   showCard('intro');
   setMessage('Ask me about the part. I can only say yes or no.');

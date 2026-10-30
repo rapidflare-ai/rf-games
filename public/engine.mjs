@@ -1,10 +1,15 @@
 export const LANE_COUNT = 3;
+export const WRONG_FIT_LOCK_SECONDS = 1.6;
+export const WRONG_FIT_SCORE_PENALTY = 60;
 export const PARTS = Object.freeze({
   gps: { name: 'GPS antenna', icon: '⌁', purpose: 'finding a position' },
   sensor: { name: 'Optical sensor', icon: '◉', purpose: 'seeing a target' },
   pcie: { name: 'PCIe upgrade', icon: '▤', purpose: 'connecting an expansion card' },
   jammer: { name: 'Signal jammer', icon: '⌗', purpose: 'blocking a control signal' },
   power: { name: 'Power cell', icon: 'ϟ', purpose: 'restoring power' },
+  radio: { name: 'Radio antenna', icon: '⌁', purpose: 'receiving shelter commands' },
+  thermal: { name: 'Thermal sensor', icon: '♨', purpose: 'finding heat through smoke' },
+  regulator: { name: 'Voltage regulator', icon: '▣', purpose: 'steadying an unstable voltage' },
 });
 
 export const DIAGNOSTICS = Object.freeze({
@@ -13,6 +18,9 @@ export const DIAGNOSTICS = Object.freeze({
   pcie: { label: 'EXPANSION BUS MISSING', hint: 'The next upgrade needs a hardware connection first.' },
   jammer: { label: 'AI SIGNAL STILL LIVE', hint: 'The frontier AI can still steer it remotely.' },
   power: { label: 'POWER DEPLETED', hint: 'Its battery cannot power a launch.' },
+  radio: { label: 'RADIO LINK LOST', hint: 'It has power, but cannot receive shelter commands.' },
+  thermal: { label: 'HEAT TARGET HIDDEN', hint: 'Smoke blocks the camera. Track the target by its heat.' },
+  regulator: { label: 'VOLTAGE UNSTABLE', hint: 'Its battery is charged, but the output keeps surging.' },
 });
 
 export const CRAFTS = Object.freeze([
@@ -77,9 +85,9 @@ export function makeScenario(seed) {
 function partQueue(seed, lane, cycle) {
   if (cycle === 0) return [['gps'], ['pcie', 'jammer'], ['power']][lane];
   const variant = seedFromText(`${seed}:${lane}:${cycle}`);
-  if (lane === 0) return [["gps"], ["sensor"], ["power"]][variant % 3];
-  if (lane === 1) return variant % 2 ? ['pcie', 'jammer'] : ['pcie', 'power'];
-  return [['power'], ['sensor'], ['jammer']][variant % 3];
+  if (lane === 0) return [['gps'], ['sensor'], ['thermal'], ['radio']][variant % 4];
+  if (lane === 1) return [['pcie', 'jammer'], ['pcie', 'regulator'], ['power', 'radio'], ['regulator', 'jammer']][variant % 4];
+  return [['power'], ['sensor'], ['regulator'], ['thermal']][variant % 4];
 }
 
 function makeBay(seed, lane, cycle) {
@@ -91,7 +99,7 @@ export function createGame(seed, mode = 'daily') {
   return {
     mode, seed, wave, spawnIndex: 0,
     bots: [], shots: [], bays: Array.from({ length: LANE_COUNT }, (_, lane) => makeBay(seed, lane, 0)),
-    core: 3, kills: 0, launches: 0, mistakes: 0, assists: 3,
+    core: 3, kills: 0, launches: 0, mistakes: 0, assists: 3, repairLock: 0,
     elapsed: 0, status: 'running', events: [], nextShotId: 0,
   };
 }
@@ -107,11 +115,13 @@ export function installPart(game, lane, part) {
   const bay = game.bays[lane];
   if (bay.ready) return { ok: false, reason: 'Craft ready to launch' };
   if (!PARTS[part]) return { ok: false, reason: 'Choose a component' };
+  if (game.repairLock > 0) return { ok: false, reason: 'Repair bay recalibrating', locked: true };
   const needed = neededPart(game, lane);
   if (part !== needed) {
     game.mistakes += 1;
+    game.repairLock = WRONG_FIT_LOCK_SECONDS;
     game.events.push({ type: 'wrong', lane, needed, part });
-    return { ok: false, reason: 'That part does not solve this diagnostic' };
+    return { ok: false, reason: 'Wrong part', penalty: WRONG_FIT_SCORE_PENALTY, lockSeconds: WRONG_FIT_LOCK_SECONDS };
   }
   bay.installed += 1;
   bay.ready = bay.installed === bay.queue.length;
@@ -124,6 +134,7 @@ export function useAssist(game, lane) {
   if (!Number.isInteger(lane) || lane < 0 || lane >= LANE_COUNT) return { ok: false, reason: 'Choose a bay' };
   if (game.assists <= 0) return { ok: false, reason: 'Flare is recharging' };
   if (game.bays[lane].ready) return { ok: false, reason: 'Craft ready to launch' };
+  if (game.repairLock > 0) return { ok: false, reason: 'Repair bay recalibrating' };
   const part = neededPart(game, lane);
   game.assists -= 1;
   const response = installPart(game, lane, part);
@@ -149,6 +160,7 @@ export function tick(game, seconds) {
   const dt = Math.max(0, Math.min(seconds, 0.12));
   game.events = [];
   game.elapsed += dt;
+  game.repairLock = Math.max(0, game.repairLock - dt);
 
   while (game.spawnIndex < game.wave.length && game.wave[game.spawnIndex].at <= game.elapsed) {
     const entry = game.wave[game.spawnIndex];
@@ -195,7 +207,7 @@ export function tick(game, seconds) {
 }
 
 export function score(game) {
-  return Math.max(0, Math.min(game.kills, game.wave.length) * 100 + game.core * 250 - game.mistakes * 15);
+  return Math.max(0, Math.min(game.kills, game.wave.length) * 100 + game.core * 250 - game.mistakes * WRONG_FIT_SCORE_PENALTY);
 }
 
 export function urgentLane(game) {

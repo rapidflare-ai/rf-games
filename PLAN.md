@@ -1,6 +1,6 @@
 # Plan and handoff
 
-Updated: 2026-10-30 (indexing, About, analytics, and shorter guides).
+Updated: 2026-10-30 (visual clues, penalties, mobile layouts, and result screens).
 
 ## Current status
 
@@ -21,9 +21,12 @@ Updated: 2026-10-30 (indexing, About, analytics, and shorter guides).
 - [x] Merge [PR #2](https://github.com/rapidflare-ai/rf-games/pull/2) with the workflow and deployment instructions.
 - [x] Create the `rf-games` Vercel project in the Rapidflare team, without a Git import.
 - [x] Add the `VERCEL_TOKEN` Actions secret, run the first deployment, and attach `games.rapidflare.ai` (HTTP 200 from Vercel on 2026-10-29).
-- [x] Add drag and drop from the tray onto a bay, a visible pause planning mode, Q/W/E lane keys, 1–5 part keys, and an always visible quick guide. Clarify Flare Auto-Fit and when diagnostics advance.
+- [x] Add drag and drop from the tray onto a bay, a visible pause planning mode, Q/W/E lane keys, part number keys, and an always visible quick guide. Clarify Flare Auto-Fit and when diagnostics advance.
+- [x] Expand Circuit Siege to eight parts and eight faults, with matching SVG silhouettes in each bay and the tray. Wrong fits deduct 60 points and lock repairs for 1.6 seconds; number keys 1–8 remain available.
+- [x] Move Flare's short guidance into a speech bubble beside its avatar. Use larger phone-friendly part tiles and show the active fault shape next to the bay diagnostic.
+- [x] Make Ten Questions more visual with a prominent target card, larger part icons, and answer cards. Give both games bold win/loss screens that call out the rogue AI.
 - [x] Enlarge Flare throughout both games and reshape the shared SVG with three visible flame tips, using the blog avatar as the reference.
-- [x] Remove the launch-count score bonus so repeated launches cannot inflate Circuit Siege's score; start a fresh v4 local best for the revised scoring.
+- [x] Remove the launch-count score bonus so repeated launches cannot inflate Circuit Siege's score; start a fresh v4 local best for that revision and v5 after the wrong-fit penalty change.
 
 ## Resume here
 
@@ -45,6 +48,6 @@ Verification for the controls change: `node --test tests/*.test.mjs` passes all 
 
 Flare art follow-up: `public/flare.mjs` now draws a distinct left, center, and right flame tip. The shared CSS enlarges Flare on the intro card, repair bay, splash cast, and Ten Questions hero. Both local pages were visually checked at desktop width; the 18 rule and page checks still pass.
 
-Scoring note: Circuit Siege has a bounded score after the launch-count bonus was removed: 100 per ghoul stopped, 250 per shelter heart left, and 15 off per wrong fit, with a maximum of 2350 for 16 ghouls. Both games still run entirely in the browser. Local best scores and shared text are unverified; a competitive leaderboard would require server-side validation of a play log against the daily scenario. Ten Questions cases and answers are published in client JavaScript, so its daily result is also not cheat resistant.
+Scoring note: Circuit Siege has a bounded score after the launch-count bonus was removed: 100 per ghoul stopped, 250 per shelter heart left, and 60 off per wrong fit, with a maximum of 2350 for 16 ghouls. Both games still run entirely in the browser. Local best scores and shared text are unverified; a competitive leaderboard would require server-side validation of a play log against the daily scenario. Ten Questions cases and answers are published in client JavaScript, so its daily result is also not cheat resistant.
 
 Open questions for a later iteration: whether to add a leaderboard, how to use consented Mixpanel data to measure return play, and whether to promote another game from `GAMES.md`.
