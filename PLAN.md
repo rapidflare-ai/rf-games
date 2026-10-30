@@ -25,7 +25,7 @@ Updated: 2026-10-29 (Haunted Circuit Siege controls pass).
 
 ## Resume here
 
-The current controls change is on `codex/haunted-drag-drop`, branched from `origin/main` at `155b5fb` after PR #2 merged. Open its PR, review the preview deployment, and merge when ready. The game is live at `games.rapidflare.ai`; the repository deploys through GitHub Actions with a Vercel token and has no Vercel Git import. `README.md` has the deploy commands, and `scripts/deploy.sh` also deploys by hand for someone with the token.
+The current controls change is in [PR #4](https://github.com/rapidflare-ai/rf-games/pull/4) on `codex/haunted-drag-drop`, branched from `origin/main` at `155b5fb` after PR #2 merged. Review its preview deployment and merge when ready. The game is live at `games.rapidflare.ai`; the repository deploys through GitHub Actions with a Vercel token and has no Vercel Git import. `README.md` has the deploy commands, and `scripts/deploy.sh` also deploys by hand for someone with the token.
 
 ## First-release scope
 
