@@ -348,12 +348,25 @@ async function shareResult() {
     track('Game Result Shared', { game: 'ten-questions', mode, method });
     if (method.startsWith('copy')) {
       $('share-button').innerHTML = method === 'copy-image' ? 'CARD COPIED! <span>✓</span>' : 'TEXT COPIED! <span>✓</span>';
-      setMessage(method === 'copy-image' ? 'Paste your result card into a post.' : 'Paste your result and link into a post.');
+      setMessage(method === 'copy-image' ? 'Paste the image into your post, then use Copy Post Text for the caption and link.' : 'Paste your result and link into a post.');
       setTimeout(() => { $('share-button').innerHTML = 'SHARE RESULT <kbd aria-hidden="true">S</kbd>'; }, 1800);
     }
   } catch (error) {
     if (error?.name === 'AbortError') return;
     setMessage('Sharing is unavailable in this browser. Try copying the page link.');
+  }
+}
+
+async function copyPostText() {
+  if (!round || round.status === 'running') return;
+  try {
+    await navigator.clipboard.writeText(`${shareText()}\n${location.origin}${location.pathname}`);
+    track('Game Result Shared', { game: 'ten-questions', mode, method: 'copy-post-text' });
+    $('copy-post-button').innerHTML = 'POST TEXT COPIED! <span>✓</span>';
+    setMessage('Paste this as the caption for your result image.');
+    setTimeout(() => { $('copy-post-button').innerHTML = 'COPY POST TEXT <kbd aria-hidden="true">C</kbd>'; }, 1800);
+  } catch {
+    setMessage('Could not copy the post text. Try again or copy the page link.');
   }
 }
 
@@ -369,6 +382,7 @@ document.addEventListener('keydown', (event) => {
   if (visible('result')) {
     if (key === 'r') { event.preventDefault(); startRound('practice'); }
     if (key === 's') { event.preventDefault(); shareResult(); }
+    if (key === 'c') { event.preventDefault(); copyPostText(); }
     if (key === 'escape') { event.preventDefault(); returnHome(); }
     return;
   }
@@ -390,6 +404,7 @@ $('practice-start').addEventListener('click', () => startRound('practice'));
 $('retry-button').addEventListener('click', () => startRound('practice'));
 $('home-button').addEventListener('click', returnHome);
 $('share-button').addEventListener('click', shareResult);
+$('copy-post-button').addEventListener('click', copyPostText);
 setupSite('ten-questions', { onAction: (action) => startRound(action === 'daily' ? 'daily' : 'practice') });
 buildTrack();
 renderGhoulList();
