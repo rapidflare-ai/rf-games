@@ -23,6 +23,7 @@ Updated: 2026-10-29 (Haunted Circuit Siege controls pass).
 - [x] Add the `VERCEL_TOKEN` Actions secret, run the first deployment, and attach `games.rapidflare.ai` (HTTP 200 from Vercel on 2026-10-29).
 - [x] Add drag and drop from the tray onto a bay, a visible pause planning mode, Q/W/E lane keys, 1–5 part keys, and an always visible quick guide. Clarify Flare Auto-Fit and when diagnostics advance.
 - [x] Enlarge Flare throughout both games and reshape the shared SVG with three visible flame tips, using the blog avatar as the reference.
+- [x] Remove the launch-count score bonus so repeated launches cannot inflate Circuit Siege's score; start a fresh v4 local best for the revised scoring.
 
 ## Resume here
 
@@ -43,5 +44,7 @@ The site is static under `public/`; `vercel.json` points Vercel there. `public/e
 Verification for the controls change: `node --test tests/*.test.mjs` passes all 18 checks. Browser play confirmed selecting a bay leaves its diagnostic unchanged; fitting the fighter's PCIe upgrade advances the bay to `1/2 · AI SIGNAL STILL LIVE`; dragging the jammer onto it completes the repair. Pausing froze the wave while leaving lane selection available, and pressing `3` fitted PCIe and resumed. The first bay is selected and visibly marked `ACTIVE BAY` at round start. A stale open `4173` browser tab showed the prior UI until reloaded; the current source and a fresh `4173` tab show Flare. Legacy internal names were removed from both games, and the separate candidate game in `GAMES.md` was renamed Repair the Bot.
 
 Flare art follow-up: `public/flare.mjs` now draws a distinct left, center, and right flame tip. The shared CSS enlarges Flare on the intro card, repair bay, splash cast, and Ten Questions hero. Both local pages were visually checked at desktop width; the 18 rule and page checks still pass.
+
+Scoring note: Circuit Siege has a bounded score after the launch-count bonus was removed: 100 per ghoul stopped, 250 per shelter heart left, and 15 off per wrong fit, with a maximum of 2350 for 16 ghouls. Both games still run entirely in the browser. Local best scores and shared text are unverified; a competitive leaderboard would require server-side validation of a play log against the daily scenario. Ten Questions cases and answers are published in client JavaScript, so its daily result is also not cheat resistant.
 
 Open questions for a later iteration: whether to add a leaderboard, how to measure return play without tracking, and whether to promote a second game from `GAMES.md`.

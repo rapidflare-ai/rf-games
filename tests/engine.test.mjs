@@ -101,6 +101,18 @@ test('breaches end the round and score rewards keeping the shelter intact', () =
   assert.equal(score(game), 0);
 });
 
+test('launching extra craft cannot inflate a perfect score', () => {
+  const game = createGame(3);
+  for (let launch = 0; launch < 20; launch += 1) {
+    installPart(game, 0, neededPart(game, 0));
+    assert.equal(launchCraft(game, 0).ok, true);
+  }
+  assert.equal(game.launches, 20);
+  assert.equal(score(game), 750);
+  game.kills = game.wave.length;
+  assert.equal(score(game), 2350);
+});
+
 test('one theme is active in code and upcoming themes are available as data', () => {
   assert.equal(ACTIVE_THEME, 'halloween');
   assert.ok(THEMES[ACTIVE_THEME]);

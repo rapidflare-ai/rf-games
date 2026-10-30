@@ -308,7 +308,8 @@ function finishRound() {
   $('result-score').textContent = String(points).padStart(4, '0');
   let bestText = mode === 'daily' ? 'Daily wave · UTC' : 'Practice run';
   if (mode === 'daily') {
-    const key = `rf-games-best-v3:${dayKey}`;
+    // The v4 key starts a fresh local best after removing launch-count points.
+    const key = `rf-games-best-v4:${dayKey}`;
     const prior = Number(readStorage(key) || 0);
     if (points > prior) {
       writeStorage(key, String(points));
