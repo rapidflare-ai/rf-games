@@ -20,8 +20,8 @@ One-time setup in the Rapidflare Vercel team (install the Vercel CLI first):
 
 1. The `rf-games` project already exists in the team, created without a Git connection. If it ever needs recreating, use `vercel project add rf-games --scope rapidflare --token "$VERCEL_TOKEN"`. The deploy script targets it by project ID; update `scripts/deploy.sh` if it is recreated.
 2. Create a Vercel token with access to the team and add it as the `VERCEL_TOKEN` **Actions secret** in `rapidflare-ai/rf-games`. Existing repositories' secrets cannot be read or copied from GitHub.
-3. Rerun PR #2's preview workflow after adding the secret. Merging that PR into `main` triggers the first production deployment automatically. Use **Deploy to Vercel → Run workflow** on `main` only if a manual retry is needed.
-4. Verify the generated `vercel.app` URL: both games, `/updates`, and the `X-Robots-Tag: noindex` header. Then add `games.rapidflare.ai` under the project's Domains and create the DNS record Vercel shows.
+3. Push a branch for a preview deployment. Merging a PR into `main` deploys production automatically. Use **Deploy to Vercel → Run workflow** on `main` for a manual retry.
+4. Verify the generated `vercel.app` URL: both games, `/about`, `/updates`, `robots.txt`, and `sitemap.xml`. Then add `games.rapidflare.ai` under the project's Domains and create the DNS record Vercel shows.
 
 Anyone with the team token can also deploy directly from this checkout after installing the Vercel CLI:
 
@@ -33,9 +33,15 @@ scripts/deploy.sh production
 
 The script targets the `rf-games` project in the Rapidflare team. Production deploys publish immediately to any production domain attached to that project. No game runtime secrets are needed.
 
-The games are kept out of search so they never crowd the Rapidflare brand's results: every page has `<meta name="robots" content="noindex">` and `vercel.json` sends `X-Robots-Tag: noindex` on every file. Do not add a `robots.txt` that blocks crawlers; a blocked crawler cannot see the noindex, and link previews would break. Sharing still works through the Open Graph and Twitter card tags.
+The games and the About page are indexable. Each page has a canonical URL and identifies Rapidflare in its metadata or page copy. `robots.txt` allows crawling and points to `sitemap.xml`. Sharing uses Open Graph and Twitter card tags.
 
-Host the games on their own subdomain or domain (the share tags assume `https://games.rapidflare.ai`), not under a path of the marketing site, and keep them out of its sitemap. If the address changes, update the `og:url`, `og:image` and `twitter:image` tags in both game pages. The share images in `public/og/` are rendered from `og/card.html` with `scripts/og-images.sh` (needs Google Chrome).
+Host the games on their own subdomain or domain (the share tags assume `https://games.rapidflare.ai`), not under a path of the marketing site. If the address changes, update canonical and share URLs in the HTML pages, `robots.txt`, and `sitemap.xml`. The share images in `public/og/` are rendered from `og/card.html` with `scripts/og-images.sh` (needs Google Chrome).
+
+## Optional Mixpanel analytics
+
+The game pages, About page, and Updates page show an optional analytics choice only when a Mixpanel project token is configured. The Mixpanel browser SDK loads only after a visitor accepts. Visitors can reopen **Analytics settings** and decline later. No event is sent before consent. The site tracks page views, About link clicks, game starts and finishes, Help opens, Flare Auto-Fit uses, and result shares. Game events include the game and daily or practice mode; no puzzle answers or personal information are sent in custom properties.
+
+To enable production analytics, create or choose a Mixpanel project and copy its **project token** (the public browser token, not an API secret). In `rapidflare-ai/rf-games` on GitHub, add an Actions **variable** named `MIXPANEL_TOKEN` under **Settings → Secrets and variables → Actions**. The deploy workflow writes the token into `public/analytics-config.mjs` before publishing. Trigger a new deployment after setting it. To enable a manual deployment, set `MIXPANEL_TOKEN` in your shell before running `scripts/deploy.sh`. The checked-in config has an empty token, so local play and deployments without the variable run with analytics off.
 
 ## Project notes
 

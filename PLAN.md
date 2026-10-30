@@ -1,6 +1,6 @@
 # Plan and handoff
 
-Updated: 2026-10-29 (Haunted Circuit Siege controls pass).
+Updated: 2026-10-30 (indexing, About, analytics, and shorter guides).
 
 ## Current status
 
@@ -15,7 +15,7 @@ Updated: 2026-10-29 (Haunted Circuit Siege controls pass).
 - [x] Slow Circuit Siege down: a simulated player making one move every 1.6 s now survives every October seed (it needed one move a second before).
 - [x] Add pause, keyboard shortcuts for every action, focus management, synthesized sound with a mute toggle, and a shared GAME menu.
 - [x] Build Ten Questions Till Dawn with 100 pre-written puzzles and a daily rotation through all of them.
-- [x] Keep the games out of search (noindex meta and header), add share cards with rendered images, and add a parody disclaimer.
+- [x] Add share cards with rendered images and a parody disclaimer. Index the games and About page with Rapidflare attribution and canonical URLs.
 - [x] Replace the crowded landing pages with a first-visit splash and an on-demand help panel; draw Flare as a blue flame holding a wrench (Circuit Siege) or a question sign (Ten Questions).
 - [x] Add the token based Vercel CLI workflow used by other Rapidflare repos, without a Vercel Git import.
 - [x] Merge [PR #2](https://github.com/rapidflare-ai/rf-games/pull/2) with the workflow and deployment instructions.
@@ -27,7 +27,7 @@ Updated: 2026-10-29 (Haunted Circuit Siege controls pass).
 
 ## Resume here
 
-The current controls change is in [PR #4](https://github.com/rapidflare-ai/rf-games/pull/4) on `codex/haunted-drag-drop`, branched from `origin/main` at `155b5fb` after PR #2 merged. Review its preview deployment and merge when ready. The game is live at `games.rapidflare.ai`; the repository deploys through GitHub Actions with a Vercel token and has no Vercel Git import. `README.md` has the deploy commands, and `scripts/deploy.sh` also deploys by hand for someone with the token.
+[PR #4](https://github.com/rapidflare-ai/rf-games/pull/4) merged. The indexing, About, analytics, and guide changes are on `codex/games-indexing-analytics`. The game is live at `games.rapidflare.ai`; the repository deploys through GitHub Actions with a Vercel token and has no Vercel Git import. `README.md` has the deploy commands and Mixpanel setup. Analytics becomes active once the GitHub Actions `MIXPANEL_TOKEN` variable is set and a new deployment runs.
 
 ## First-release scope
 
@@ -47,4 +47,4 @@ Flare art follow-up: `public/flare.mjs` now draws a distinct left, center, and r
 
 Scoring note: Circuit Siege has a bounded score after the launch-count bonus was removed: 100 per ghoul stopped, 250 per shelter heart left, and 15 off per wrong fit, with a maximum of 2350 for 16 ghouls. Both games still run entirely in the browser. Local best scores and shared text are unverified; a competitive leaderboard would require server-side validation of a play log against the daily scenario. Ten Questions cases and answers are published in client JavaScript, so its daily result is also not cheat resistant.
 
-Open questions for a later iteration: whether to add a leaderboard, how to measure return play without tracking, and whether to promote a second game from `GAMES.md`.
+Open questions for a later iteration: whether to add a leaderboard, how to use consented Mixpanel data to measure return play, and whether to promote another game from `GAMES.md`.

@@ -1,5 +1,6 @@
 import { isMuted, onMuteChange, setMuted, sfx } from './audio.mjs';
 import { paintFlares } from './flare.mjs';
+import { setupAnalytics, track } from './analytics.mjs';
 
 export const GAMES = Object.freeze([
   { id: 'circuit-siege', name: 'Haunted Circuit Siege', href: '/' },
@@ -107,6 +108,7 @@ function setupDialogs(currentId, { onAction, onHelpOpen } = {}) {
   const seenKey = `rf-games-splash-seen:${currentId}`;
   const openHelp = () => {
     if (!help || help.open) return;
+    track('Game Help Opened', { game: currentId });
     if (splash?.open) splash.close();
     onHelpOpen?.();
     help.showModal();
@@ -134,6 +136,7 @@ function setupDialogs(currentId, { onAction, onHelpOpen } = {}) {
     try { localStorage.setItem(seenKey, 'yes'); } catch { /* Private browsing may deny storage. */ }
   });
   document.getElementById('help-button')?.addEventListener('click', openHelp);
+  document.querySelector('.quick-help')?.addEventListener('click', openHelp);
   document.addEventListener('keydown', (event) => {
     const question = event.key === '?' || (event.key === '/' && event.shiftKey);
     if (!question || keyIsForAField(event) || document.querySelector('dialog[open]')) return;
@@ -147,6 +150,7 @@ function setupDialogs(currentId, { onAction, onHelpOpen } = {}) {
 
 export function setupSite(currentId, options) {
   paintFlares();
+  setupAnalytics();
   setupGamePicker(currentId);
   setupSoundToggle();
   setupDialogs(currentId, options);

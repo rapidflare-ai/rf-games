@@ -16,6 +16,7 @@ if ! command -v vercel >/dev/null 2>&1; then
 fi
 
 cd "$(dirname "$0")/.."
+node scripts/write-analytics-config.mjs
 
 # The org and project IDs pick the team and project, as in rf-marketing-website's deploy.
 # Passing --scope as well makes the CLI look the token's user up first, which fails
