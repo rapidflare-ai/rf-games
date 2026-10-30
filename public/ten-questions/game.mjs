@@ -277,7 +277,8 @@ function finishRound() {
   // Let the sunrise or the breach play before the result card covers the board.
   const reveal = () => {
     showCard('result');
-    $('share-button').focus();
+    cards.result.scrollIntoView({ block: 'start', behavior: 'auto' });
+    $('share-button').focus({ preventScroll: true });
   };
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) reveal();
   else setTimeout(reveal, 1600);

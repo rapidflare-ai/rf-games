@@ -46,6 +46,7 @@ function prettyDay(key) {
 function showCard(name) {
   for (const [key, card] of Object.entries(cards)) card.classList.toggle('hidden', key !== name);
   overlay.classList.toggle('hidden', !name);
+  $('game-board').classList.toggle('result-active', name === 'result');
   document.querySelector('.lane-list').inert = Boolean(name);
   document.querySelector('.control-panel').inert = Boolean(name);
 }
@@ -340,7 +341,8 @@ function finishRound() {
   }
   $('best-line').textContent = bestText;
   showCard('result');
-  $('share-button').focus();
+  cards.result.scrollIntoView({ block: 'start', behavior: 'auto' });
+  $('share-button').focus({ preventScroll: true });
 }
 
 function returnHome() {
